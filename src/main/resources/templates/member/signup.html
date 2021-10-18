@@ -34,8 +34,39 @@
             margin-bottom:5px;
         }
 
-
     </style>
+    <script th:inline="javascript">
+        $(document).ready(function (){
+            $('#sendPhoneNumber').click(function(){
+                let phoneNumber = $('#tel').val();
+                if (phoneNumber == null){
+                    alert("핸드폰 번호를 입력해주세요")
+                    return;
+                }
+                alert("인증번호가 전송되었습니다");
+                $.ajax({
+                    type: "GET",
+                    url: "/check/sendSMS",
+                    data: {
+                        "phoneNumber" : phoneNumber
+                    },
+                    success: function(res){
+                        $('#checkBtn').click(function(){
+                            if($.trim(res) ==$('#inputCertifiedNumber').val()){
+                                alert("성공");
+                            }else{
+                                alert("실패");
+                            }
+                        })
+
+
+                    }
+                })
+            });
+
+        });
+
+    </script>
 </head>
 <body>
 <div layout:fragment="content">
@@ -51,6 +82,23 @@
 
                 <form class="needs-validation" th:object="${joinFormVo}" th:action="@{/signup}" method="post" name="joinFormVo"
                       novalidate>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="name" class="form-label">name <span class="star">*</span></label>
+                            <div class="input-group">
+                                <input type="text" th:field="*{name}" th:class="form-control"
+                                       th:classappend="${#fields.hasErrors('name') } ? 'is-invalid'" id="name"
+                                       placeholder="홍길동" required>
+                                <div th:if="${#fields.hasErrors('name')}" th:class="${#fields.hasErrors('name')}? 'invalid-feedback'"
+                                     th:each="err : ${#fields.errors('name')}" th:text="${err}">
+                                    Invalid email
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
 
 
                     <div class="row g-3">
@@ -59,7 +107,7 @@
                             <div class="input-group">
                                 <input type="text" th:field="*{username}" th:class="form-control"
                                        th:classappend="${#fields.hasErrors('username') } ? 'is-invalid'" id="username"
-                                       placeholder="you@example.com" required>
+                                       placeholder="abc@test.com" required>
                                 <div th:if="${#fields.hasErrors('username')}" th:class="${#fields.hasErrors('username')}? 'invalid-feedback'"
                                      th:each="err : ${#fields.errors('username')}" th:text="${err}">
                                     Invalid email
@@ -127,8 +175,18 @@
                                 </div>
                             </div>
                         </div>
-
                     </div>
+                    <button type="button" th:id="sendPhoneNumber" class="w-10 btn btn-dark">인증번호 보내기</button>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label" >인증번호 <span class="star">*</span></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" th:id="inputCertifiedNumber">
+                        </div>
+                    </div>
+                    </div>
+                    <button type="button" class="w-10 btn btn-dark" th:id="checkBtn">인증번호 확인</button>
 
                     <div class="row g-3">
                         <div class="col-8">
@@ -152,7 +210,6 @@
                         </div>
                         <div class="col-5">
                             <div class="input-group">
-<!--                                <input type="text" th:field="*{detailAddress}" class="form-control" id="street">-->
                                 <input type="text" th:field="*{detailAddress}" class="form-control"
                                        th:classappend="${#fields.hasErrors('detailAddress') } ? 'is-invalid'" id="street">
                                 <div th:if="${#fields.hasErrors('detailAddress')}"

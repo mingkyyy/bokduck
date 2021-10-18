@@ -14,6 +14,11 @@ public class JoinFormVo {
 
     @NotNull
     @NotBlank
+    @Length(min=2, max = 10, message = "이름은 2자 이상 10자 이하여야 합니다.")
+    private String name;
+
+    @NotNull
+    @NotBlank
     @Length(min=5, max=40, message="이메일은 5자 이상 40자 이하여야 합니다.")
     @Email(message = "이메일 형식을 지켜주세요. (예. you@test.com)")
     private String username;
@@ -25,6 +30,8 @@ public class JoinFormVo {
     private String password;
 
     private String passwordVerify;
+
+
 
     @NotNull
     @NotBlank

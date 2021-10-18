@@ -1,7 +1,6 @@
 package com.project.bokduck.controller;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
+
 import com.google.gson.JsonObject;
 import com.project.bokduck.domain.*;
 import com.project.bokduck.repository.*;
@@ -9,7 +8,6 @@ import com.project.bokduck.service.CommunityService;
 import com.project.bokduck.service.MainpageService;
 import com.project.bokduck.service.MemberService;
 import com.project.bokduck.service.PassEmailService;
-import com.project.bokduck.specification.CommunitySpecs;
 import com.project.bokduck.util.CommunityFormVo;
 import com.project.bokduck.domain.Member;
 import com.project.bokduck.domain.Review;
@@ -25,7 +23,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,7 +36,6 @@ import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
-
 import javax.annotation.PostConstruct;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
@@ -60,7 +56,6 @@ public class MainController {
     private final ReviewService reviewService;
     private final ReviewCategoryRepository reviewCategoryRepository;
     private final PlatformTransactionManager transactionManager;
-    private final CommunityService communityService;
     private final ImageRepository imageRepository;
     private final FileRepository fileRepository;
     private final MainpageService mainpageService;
@@ -70,11 +65,8 @@ public class MainController {
 
     /**
      * 임의의 리뷰글 및 커뮤니티글 생성
-<<<<<<< Updated upstream
-     * @author miri
-=======
+     *
      * @author 미리
->>>>>>> Stashed changes
      */
     @PostConstruct
     @DependsOn("memberRepository")
@@ -84,17 +76,18 @@ public class MainController {
         TransactionTemplate tmpl = new TransactionTemplate(transactionManager);
         tmpl.execute(new TransactionCallbackWithoutResult() {
             @Override
-            protected void doInTransactionWithoutResult(TransactionStatus status) {
+            protected void doInTransactionWithoutResult(
+            TransactionStatus status) {
 
-                Long[] array = {1l, 2l};
+                Long[] array = {1L, 2l};
 
                 // 태그 만들어두기
                 List<Tag> tagList = new ArrayList<>(); // 임시태그 담아보자
                 String[] tagNameList = {"넓음", "깨끗함", "벌레없음"};
 
-                for (int i = 0; i < tagNameList.length; ++i) {
+                for (String s : tagNameList) {
                     Tag tag = new Tag();
-                    tag.setTagName(tagNameList[i]);
+                    tag.setTagName(s);
                     tagList.add(tag);
                 }
 
@@ -296,7 +289,7 @@ public class MainController {
                             .nickname(member1.getNickname())
                             .nicknameOpen(member1.isNicknameOpen())
                             .community(commu)
-                            .parentId(-1l)
+                            .parentId(-1L)
                             .regdate(LocalDateTime.now())
                             .build();
 
@@ -337,6 +330,7 @@ public class MainController {
         });
     }
 
+
     @InitBinder("joinFormVo")
     protected void initBinder(WebDataBinder dataBinder) {
         dataBinder.addValidators(new JoinFormValidator(memberRepository));
@@ -344,9 +338,10 @@ public class MainController {
 
     /**
      * "/" 요청을 받으면 메인페이지를 불러온다
-     * @author 이선주
+     *
      * @param model 리턴되는 페이지로 애트리뷰트 전달
      * @return index.html
+     * @author 이선주
      */
     @RequestMapping("/")
     public String index(Model model) {
@@ -370,14 +365,34 @@ public class MainController {
         return "index";
     }
 
+    /**
+     *
+     * 회원가입시 핸드폰 번호 인증 보내기
+     * @author 민경
+     * @param phoneNumber 인증보낼 핸드폰 번호
+     * @return 인증 번호
+     */
+    @GetMapping("/check/sendSMS")
+    @ResponseBody
+    public String sendSMS(String phoneNumber){
+
+        Random rand  = new Random();
+        String numStr = "";
+        for(int i=0; i<4; i++) {
+            String ran = Integer.toString(rand.nextInt(10));
+            numStr+=ran;
+        }
+        System.out.println("수신자 번호 : " + phoneNumber);
+        System.out.println("인증번호 : " + numStr);
+        memberService.certifiedPhoneNumber(phoneNumber,numStr);
+        return numStr;
+
+    }
 
     /**
-<<<<<<< Updated upstream
-     * @author miri
-=======
-     * @author 미리
->>>>>>> Stashed changes
+     *
      * @return 로그인 페이지
+     * @author 미리
      */
     @GetMapping("/login")
     public String login() {
@@ -386,9 +401,10 @@ public class MainController {
 
     /**
      * 회원가입 버튼이 눌리면(요청이 들어오면) 회원가입 폼 페이지를 불러온다
-     * @author 이선주
+     *
      * @param model 리턴되는 페이지로 애트리뷰트 전달
      * @return /member/signup.html
+     * @author 이선주
      */
     @GetMapping("/signup")
     public String signupForm(Model model) {
@@ -398,10 +414,11 @@ public class MainController {
 
     /**
      * 회원가입 폼을 입력 후 가입 버튼을 눌렀을 때, DB에 사용자가 입력한 정보들을 저장하고 강제 로그인해준다
-     * @author 이선주
+     *
      * @param joinFormVo 회원가입 입력 폼을 위한 VO
-     * @param errors 일어날 수 있는 회원가입 에러들
+     * @param errors     일어날 수 있는 회원가입 에러들
      * @return 메인페이지로 되돌아간다
+     * @author 이선주
      */
     @PostMapping("/signup")
     public String signupSubmit(@Valid JoinFormVo joinFormVo, Errors errors) {
@@ -409,48 +426,14 @@ public class MainController {
             log.info("회원가입 에러 : {}", errors.getAllErrors());
             return "/member/signup";
         }
-
         memberService.processNewMember(joinFormVo);
-
         return "redirect:/";
     }
-
-    /**
-     * 회원가입 완료 후 사용자가 입력한 이메일주소로 이메일을 보내 인증한다
-     * @author 이선주
-     * @param username 회원가입한 사용자의 이메일
-     * @param token 이메일이 일치하는지 확인하기 위한 토큰
-     * @param model 리턴할 페이지로 애트리뷰트 전달
-     * @return member/email-check-result.html
-     */
-    @Transactional
-    @GetMapping("/email-check")
-    public String emailCheck(String username, String token, Model model) {
-
-        Optional<Member> optional = memberRepository.findByUsername(username);
-        boolean result;
-
-        if (optional.isEmpty()) {
-            result = false;
-        } else if (!optional.get().getEmailCheckToken().equals(token)) {
-            result = false;
-        } else {
-            result = true;
-            optional.get().setEmailVerified(true);
-        }
-
-        String nickname = memberRepository.findByUsername(username).get().getNickname();
-
-        model.addAttribute("nickname", nickname);
-        model.addAttribute("result", result);
-
-        return "member/email-check-result";
-    }
-
     /**
      * 비밀번호 찾기 버튼 누르면 비밀번호 찾기 페이지를 불러온다.
-     * @author 민경
+     *
      * @return member/password.html
+     * @author 민경
      */
     @GetMapping("/password")
     public String password() {
@@ -459,10 +442,11 @@ public class MainController {
 
     /**
      * DB상에 id를 확인하고 id 확인 후 일치하면 해당 id로 임시 비밀번호를 발송한다.
-     * @author 민경
+     *
      * @param username db 에서 비교 하는 값
      * @param model
      * @return 성공  -> 메일 발송, 성공 메세지 출력 , 실패 - 실패 메세지 출력 으로 member/password 뷰 변경
+     * @author 민경
      */
     @PostMapping("/password")
     public String passwordSubmit(String username, Model model) {
@@ -477,424 +461,19 @@ public class MainController {
         model.addAttribute("message", message);
         return "member/password";
     }
-    /**
-     * 리뷰 상세보기 리뷰글 연결
-     * @author 원재
-     * @param model
-     * @param id 리뷰글 id
-     * @param member 현재 로그인한 회원
-     * @return post/review/read.html
-     */
-    @GetMapping("/review/read")
-    public String readReview(Model model, @RequestParam(name = "id") Long id, @CurrentMember Member member) {
-        Review review = reviewService.findById(id);
-
-        reviewService.increaseHit(id);
-
-        model.addAttribute("review", review);
-        model.addAttribute("currentMember", member);
-
-        CommentReview comment = new CommentReview();
-        model.addAttribute("comment", comment);
-
-        CommentReview subComment = new CommentReview();
-        model.addAttribute("subComment", subComment);
-
-        return "post/review/read";
-    }
-
-    /**
-     * 리뷰글 좋아요 누를시 특정글 좋아요 증가
-     * @author 원재
-     * @param id 리뷰 id
-     * @param member 현재 로그인한 회원
-     * @return
-     */
-    // 리뷰 컨트롤러
-    @PostMapping("/read/like")
-    @ResponseBody
-    public String readLikeReview(Long id, @CurrentMember Member member) {
-        // 좋아요 눌렀을 때
-
-        String resultCode = "";
-        String message = "";
-
-        // 좋아요 개수
-        int likeCheck = reviewService.findById(id).getLikers().size();
 
 
-        switch (reviewService.addLike(member, id)) {
-            case ERROR_AUTH:
-                resultCode = "error.auth";
-                message = "로그인이 필요한 서비스입니다.";
-                break;
-            case ERROR_INVALID:
-                resultCode = "error.invalid";
-                message = "삭제된 게시물 입니다.";
-                break;
-            case DUPLICATE:
-                resultCode = "duplicate";
-                message = "좋아요 취소 완료!";
-                likeCheck -= 1;
-                break;
-            case OK:
-                resultCode = "ok";
-                message = "좋아요 완료!";
-                likeCheck += 1;
-                break;
-        }
-
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("resultCode", resultCode);
-        jsonObject.addProperty("message", message);
-        jsonObject.addProperty("likeCheck", likeCheck);
-
-        log.info("jsonObject.toString() : {}", jsonObject.toString());
-
-        return jsonObject.toString();
-    }
-
-    /**
-     * 리뷰글 작성자 본인일시 디비에 리뷰글 삭제
-     * @author 원재
-     * @param id
-     * @return jsonObject
-     */
-    @GetMapping("/read/delete")
-    @ResponseBody
-    public String reviewDelete(Long id) {
-
-        String resultCode = "";
-        String message = "";
-        if (reviewService.deleteById(id)) {
-
-            resultCode = "200";
-            message = "삭세 성공";
-        } else {
-            resultCode = "400";
-            message = "실패 되었습니다.";
-        }
-
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("resultCode", resultCode);
-        jsonObject.addProperty("message", message);
-
-        return jsonObject.toString();
-    }
-
-    /**
-     * 리뷰 댓글 작성후 DB에 저장후 화면 전달
-     * @author 원재
-     * @param comment 댓글
-     * @param id 리뷰 id
-     * @param model
-     * @param member 현재 로그인한 회원
-     * @return 리뷰글
-     */
-    @PostMapping("/review/read/comment/{id}")
-    public String reviewComment(CommentReview comment, @PathVariable long id, Model model, @CurrentMember Member member) {
-
-        //DB에 댓글정보 저장
-        CommentReview commentReview = CommentReview.builder()
-                .nickname(member.getNickname())
-                .nicknameOpen(member.isNicknameOpen())
-                .regdate(LocalDateTime.now())
-                .text(comment.getText())
-                .parentId(-1l)
-                .review(reviewRepository.findById(id).orElseThrow())
-                .build();
-
-        commentReviewRepository.save(commentReview);
-
-        return readReview(model, id, member);
-    }
-
-    /**
-     * 리뷰 댓글 대댓글일 경우 DB에 저장
-     * @author 원재
-     * @param subComment 대댓글
-     * @param id 리뷰 id
-     * @param model
-     * @param member 현재 로그인한 회원
-     * @return 리뷰 상세보기
-     */
-    @PostMapping("/review/read/subcomment/{id}")
-    public String reviewSubComment(CommentReview subComment, @PathVariable long id, Model model, @CurrentMember Member member) {
-
-        //DB에 답글정보 저장
-        CommentReview subCommentCommunity = CommentReview.builder()
-                .nickname(member.getNickname())
-                .nicknameOpen(member.isNicknameOpen())
-                .regdate(LocalDateTime.now())
-                .text(subComment.getText())
-                .parentId(subComment.getParentId())
-                .review(reviewRepository.findById(id).orElseThrow())
-                .build();
-
-        commentReviewRepository.save(subCommentCommunity);
-
-        return readReview(model, id, member);
-    }
-
-    /**
-     * 커뮤니티 '글쓰기' 버튼을 눌렀을 때 글쓰기 폼 페이지를 불러온다
-     * @author 이선주
-     * @param model 리턴할 페이지로 애트리뷰트 전달
-     *@return post/community/write.html
-     */
-    @GetMapping("/community/write")
-    public String communityWriteForm(Model model) {
-        model.addAttribute("vo", new CommunityFormVo());
-        return "post/community/write";
-    }
-
-    /**
-     * 글쓰기를 완료하고 '게시' 버튼을 눌렀을 때 DB에 사용자가 입력한 정보를 저장한다
-     * @author 이선주
-     * @param member 글쓴이
-     * @param vo 커뮤니티 글 입력 폼을 위한 VO
-     * @param model 리턴할 페이지로 애트리뷰트 전달
-     * @return 글 상세보기 페이지로 이동
-     */
-    @PostMapping("/community/write")
-    @Transactional
-    public String communityWriteSubmit(@CurrentMember Member member, CommunityFormVo vo, Model model) {
-
-        String strTags = vo.getTags();
-
-        //DB에 저장할 List<Tag>형 변수 설정
-        List<Tag> tagList = new ArrayList<>();
-
-        if (!vo.getTags().isEmpty()) {
-            JsonArray tagsJsonArray = new Gson().fromJson(vo.getTags(), JsonArray.class);
-
-            for (int i = 0; i < tagsJsonArray.size(); ++i) {
-                JsonObject object = tagsJsonArray.get(i).getAsJsonObject();
-                String tagValue = object.get("value").getAsString();
-
-                Tag tag = Tag.builder()
-                        .tagName(tagValue)
-                        .build();
-
-                tagList.add(tag);
-            }
-        }
-
-        //DB에 저장할 CommunityCategory형 변수 설정
-        CommunityCategory category = CommunityCategory.TIP;
-
-        switch (vo.getCommunityCategory()) {
-            case 0:
-                category = CommunityCategory.TIP;
-                break;
-            case 1:
-                category = CommunityCategory.INTERIOR;
-                break;
-            case 2:
-                category = CommunityCategory.EAT;
-                break;
-            case 3:
-                category = CommunityCategory.BOARD;
-                break;
-            default:
-        }
-
-        //데이터를 DB에 저장
-        Community community = Community.builder()
-                .postName(vo.getPostName())
-                .postContent(vo.getPostContent())
-                .regdate(LocalDateTime.now())
-                .writer(member)
-                .tags(tagList)
-                .communityCategory(category)
-                .build();
-
-        Community savedCommu = communityRepository.save(community);
-
-        //TAG_TAG_TO_POST 테이블에 데이터 넣기
-        for (Tag t : tagList) {
-            if (t.getTagToPost() == null) {
-                t.setTagToPost(new ArrayList<Post>());
-            }
-            t.getTagToPost().add(community);
-        }
-
-        return getCommunityRead(model, savedCommu.getId(), member);
-    }
-
-    /**
-     * 커뮤니티 탭을 클릭하면 커뮤니티 리스트 화면페이지를 불러온다.
-     * @author 민경
-     * @param pageable 한 페이지당 보여줄 개수
-     * @param member 현재 로그인한 회원
-     * @param model
-     * @param check 정렬 기준
-     * @return 커뮤니티 리스트 화면
-     */
-    @GetMapping("/community/list")
-    public String community(@PageableDefault(size = 5, sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
-                            @CurrentMember Member member, Model model,
-                            @RequestParam(required = false, defaultValue = "all") String check) {
-        Page<Community> communityList = communityService.findPage(pageable);
-
-        if (member != null) {
-            member = memberRepository.getById(member.getId());
-            model.addAttribute("member", member);
-        }
-        int startPage = Math.max(1, communityList.getPageable().getPageNumber() - 5);
-        int endPage = Math.min(communityList.getTotalPages(), communityList.getPageable().getPageNumber() + 5);
-        model.addAttribute("startPage", startPage);
-        model.addAttribute("endPage", endPage);
-        model.addAttribute("check", check);
-        model.addAttribute("communityList", communityList);
-        model.addAttribute("state", "all");
-
-        return "post/community/list";
-    }
-
-    /**
-     * 커뮤니티 리스트 화면에서 카테고리, 정렬, 페이징, 검색 한 기준에 따라서 변경된 값으로 list 출력
-     * @author 민경
-     * @param pageable 한 페이지당 글 게수
-     * @param model
-     * @param community 카테고리 종류
-     * @param check 최신순, 좋아요 순 정렬 기준
-     * @param member 현재 로그인한 멤버
-     * @param searchText 검색할 키워드
-     * @return post/community/list.html
-     */
-    @GetMapping("/community/list/category")
-    public String communityList(@PageableDefault(size = 5, sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
-                                Model model,
-                                @RequestParam(required = false, defaultValue = "all") String community,
-                                @RequestParam(required = false, defaultValue = "all") String check,
-                                @CurrentMember Member member, String searchText) {
-
-        String state = "all";
-        String arrayLike = null;
-        communityService.createLikeCount();
-        Page<Community> communityList = null;
-        if (check.equals("like")) {
-            check = "like";
-        } else {
-            check = "good";
-        }
-
-        switch (community) {
-            case "all":
-                communityList = communityRepository.findAll(pageable);
-                state = "all";
-                break;
-            case "tip":
-                communityList = communityService.findCommunityCategoryPage(CommunityCategory.TIP, pageable);
-                state = "tip";
-                break;
-            case "interior":
-                communityList = communityService.findCommunityCategoryPage(CommunityCategory.INTERIOR, pageable);
-                state = "interior";
-                break;
-            case "eat":
-                communityList = communityService.findCommunityCategoryPage(CommunityCategory.EAT, pageable);
-                state = "eat";
-                break;
-            case "board":
-                communityList = communityService.findCommunityCategoryPage(CommunityCategory.BOARD, pageable);
-                state = "board";
-                break;
-        }
-
-        if (member != null) {
-            member = memberRepository.getById(member.getId());
-            model.addAttribute("member", member);
-        }
-
-        if (searchText != null) {
-            if (!searchText.isEmpty()) {
-                state = "search";
-                String[] search = {"postName", "postContent"};
-                Specification<Community> searchSpec = null;
-
-                for (String s : search) {
-                    Map<String, Object> searchMap = new HashMap<>();
-                    searchMap.put(s, searchText);
-                    searchSpec =
-                            searchSpec == null ? CommunitySpecs.searchText(searchMap)
-                                    : searchSpec.or(CommunitySpecs.searchText(searchMap));
-
-                }
 
 
-                Specification<Tag> tagSpec = CommunitySpecs.searchTagDetails(searchText);
-                List<Tag> tagList = tagRepository.findAll(tagSpec);
-                searchSpec = searchSpec.or(CommunitySpecs.searchTag(tagList));
-                communityList = communityRepository.findAll(searchSpec, pageable);
-            }
-        }
 
-        int startPage = Math.max(1, communityList.getPageable().getPageNumber() - 5);
-        int endPage = Math.min(communityList.getTotalPages(), communityList.getPageable().getPageNumber() + 5);
-        model.addAttribute("pageable", pageable);
-        model.addAttribute("startPage", startPage);
-        model.addAttribute("endPage", endPage);
-        model.addAttribute("state", state);
-        model.addAttribute("searchText", searchText);
-        model.addAttribute("arrayLike", arrayLike);
-        model.addAttribute("communityList", communityList);
-        model.addAttribute("member", member);
-        model.addAttribute("check", check);
-
-        return "post/community/list";
-    }
-
-    /**
-     * 커뮤니티 리스트에서서 '좋아요' 버튼 눌렀을때 실패시 메세지를 출력하고 성공시 하트의 사진이 변경, db 변경
-     * author 민경
-     * @param member 좋아요 누른 멤버
-     * @return 실패 -> 메세지 출력, 성공 -> 하트의 사진 변경 + db에 좋아요 한 게시물이 생성
-     */
-    @GetMapping("/community/list/like") //카테고리 리스트 좋아요
-    @ResponseBody
-    public String like(Long id, @CurrentMember Member member) {
-        String resultCode = "";
-        String message = "";
-
-        int likeCheck = communityService.findCommunityId(id).getLikers().size();
-
-        switch (communityService.addLike(member, id)) {
-            case ERROR_AUTH:
-                resultCode = "error.auth";
-                message = "로그인이 필요한 서비스 입니다.";
-                break;
-            case ERROR_INVALID:
-                resultCode = "error.invalid";
-                message = "없는 게시글 입니다.";
-                break;
-            case ERROR_DUPLICATE:
-                resultCode = "error.duplicate";
-                message = "좋아요를 삭제하였습니다.";
-                likeCheck -= 1;
-                break;
-            case OK:
-                resultCode = "ok";
-                message = "좋아요를 추가하였습니다.";
-                likeCheck += 1;
-                break;
-        }
-
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("resultCode", resultCode);
-        jsonObject.addProperty("message", message);
-        jsonObject.addProperty("likeCheck", likeCheck);
-
-        return jsonObject.toString();
-    }
 
     /**
      * 비밀번호 변경 버튼을 클릭 했을때 보여주는 뷰
-     * @author 민경
+     *
      * @param model
      * @param member 현재 로그인한 회원 정보
      * @return 성공 -> /.html 이동 실패 -> member/password-change.html
+     * @author 민경
      */
     @RequestMapping("/password/change")
     public String passwordChange(Model model, @CurrentMember Member member) {
@@ -905,304 +484,19 @@ public class MainController {
         return "member/password-change";
     }
 
-    /**
-     * 커뮤니티 상세보기 페이지 요청이 들어왔을 때 페이지를 불러온다
-     * @author 이선주
-     * @param model 리턴할 페이지로 애트리뷰트 전달
-     * @param id 상세보기할 글의 id
-     * @param member 현재 로그인해있는 유저
-     * @return 커뮤니티 상세보기 페이지로 이동
-     */
-    @GetMapping("/community/read")
-    @Transactional
-    public String getCommunityRead(Model model, long id, @CurrentMember Member member) {
 
-        Community community = communityRepository.findById(id).orElseThrow();
 
-        if (community.getVisitedMember() == null) {
-            community.setVisitedMember(new ArrayList<>());
-        }
-        if (community.getLikers() == null) {
-            community.setLikers(new ArrayList<>());
-        }
-        if (community.getCommentCommunity() == null) {
-            community.setCommentCommunity(new ArrayList<>());
-        }
-
-        //조회수 올리기
-        if (!community.getVisitedMember().contains(memberRepository.getById(member.getId()))) { //아직 조회 안했으면
-            community.setHit(community.getHit() + 1);
-            List members = community.getVisitedMember();
-            members.add(member);
-            community.setVisitedMember(members);
-        }
-
-        model.addAttribute("community", community);
-        model.addAttribute("currMem", member);
-
-        CommentCommunity comment = new CommentCommunity();
-        model.addAttribute("comment", comment);
-
-        CommentCommunity subComment = new CommentCommunity();
-        model.addAttribute("subComment", subComment);
-
-        return "post/community/read";
-    }
-
-    /**
-     * '삭제' 버튼을 눌렀을 때 커뮤니티 게시글을 DB에서 삭제해준다
-     * @author 이선주
-     * @param id 삭제할 커뮤니티 글의 id
-     * @return jsonObject
-     */
-    @GetMapping("/community/delete")
-    @ResponseBody
-    public String communityDelete(long id) {
-
-        communityRepository.deleteById(id);
-
-        JsonObject jsonObject = new JsonObject();
-
-        return jsonObject.toString();
-    }
-
-    /**
-     * 커뮤니티 게시글 수정 페이지 요청이 들어왔을 때 수정 폼 페이지를 불러온다
-     * @author 이선주
-     * @param model 리턴할 페이지로 애트리뷰트 전달
-     * @param id 수정할 글의 id
-     * @return 글 수정 페이지
-     */
-    @GetMapping("/community/modify")
-    @Transactional
-    public String getCommunityModify(Model model, long id) {
-
-        Community community = communityRepository.findById(id).orElseThrow();
-
-        CommunityFormVo vo = new CommunityFormVo();
-        vo.setPostName(community.getPostName());
-        vo.setPostContent(community.getPostContent());
-
-        String strTags = "[";
-        for (int i = 0; i < community.getTags().size(); ++i) {
-            strTags += "{\"value\":\"" + community.getTags().get(i).getTagName() + "\"}";
-
-            if (i == community.getTags().size() - 1) break;
-
-            strTags += ",";
-        }
-        strTags += "]";
-
-        vo.setTags(strTags);
-
-        //카테고리 작업
-        int intCa = 0;
-
-        if (community.getCommunityCategory() == CommunityCategory.TIP) {
-            intCa = 0;
-        }
-        if (community.getCommunityCategory() == CommunityCategory.INTERIOR) {
-            intCa = 1;
-        }
-        if (community.getCommunityCategory() == CommunityCategory.EAT) {
-            intCa = 2;
-        }
-        if (community.getCommunityCategory() == CommunityCategory.BOARD) {
-            intCa = 3;
-        }
-
-        vo.setCommunityCategory(intCa);
-
-        model.addAttribute("vo", vo);
-        model.addAttribute("communityId", id);
-
-        return "post/community/modify";
-    }
-
-    /**
-     * 사용자가 폼 작성 후 '수정'을 누르면 DB에 수정된 정보를 저장한다
-     * @author 이선주
-     * @param id 수정할 글의 id
-     * @param member 글을 수정한 유저(현재 로그인해있는 유저)
-     * @param vo 수정한 정보를 담을 커뮤니티 글 입력 폼 VO
-     * @param model 리턴할 페이지로 애트리뷰트 전달
-     * @return 수정된 글 상세보기 페이지
-     */
-    @PostMapping("/community/modify/{id}")
-    @Transactional
-    public String communityModifySubmit(@PathVariable long id, @CurrentMember Member member, CommunityFormVo vo, Model model) {
-
-        //DB에 저장할 List<Tag>형 변수 설정
-        List<Tag> tagList = new ArrayList<>();
-
-        if (!vo.getTags().isEmpty()) {
-            JsonArray tagsJsonArray = new Gson().fromJson(vo.getTags(), JsonArray.class);
-
-            for (int i = 0; i < tagsJsonArray.size(); ++i) {
-                JsonObject object = tagsJsonArray.get(i).getAsJsonObject();
-                String tagValue = object.get("value").getAsString();
-
-                Tag tag = Tag.builder()
-                        .tagName(tagValue)
-                        .build();
-
-                tagList.add(tag);
-            }
-        }
-
-        //DB에 저장할 CommunityCategory형 변수 설정
-        CommunityCategory category = CommunityCategory.TIP;
-
-        switch (vo.getCommunityCategory()) {
-            case 0:
-                category = CommunityCategory.TIP;
-                break;
-            case 1:
-                category = CommunityCategory.INTERIOR;
-                break;
-            case 2:
-                category = CommunityCategory.EAT;
-                break;
-            case 3:
-                category = CommunityCategory.BOARD;
-                break;
-            default:
-        }
-
-        Community community = communityRepository.findById(id).orElseThrow();
-        community.setPostName(vo.getPostName());
-        community.setPostContent(vo.getPostContent());
-        community.setCommunityCategory(category);
-
-        List<Tag> previousTagList = community.getTags();
-        community.setTags(tagList);
-
-        //현재 게시물을 수정 시 지운 태그들의 tagToPost에서 제거
-        for (Tag t : previousTagList) {
-            List<Post> postList = t.getTagToPost();
-            postList.remove(communityRepository.findById(id).orElseThrow());
-            t.setTagToPost(postList);
-        }
-
-        //수정 시 추가한 태그들의 tagToPost에 현재 게시물 추가
-        for (Tag t : tagList) {
-            if (t.getTagToPost() == null) {
-                t.setTagToPost(new ArrayList<Post>());
-            }
-            t.getTagToPost().add(community);
-        }
-
-        return getCommunityRead(model, id, member);
-    }
-
-    /**
-     * 댓글을 쓴 후 댓글쓰기 버튼을 누르면 댓글 정보를 DB에 저장한다
-     * @author 이선주
-     * @param comment 쓴 댓글 내용을 담는 객체
-     * @param id 댓글을 쓴 글의 id
-     * @param model 리턴할 페이지로 애트리뷰트 전달
-     * @param member 댓글을 쓴 유저(현재 로그인해있는 유저)
-     * @return 댓글 정보가 업데이트된 상세보기 페이지
-     */
-    @PostMapping("/community/read/comment/{id}")
-    public String submitComment(CommentCommunity comment, @PathVariable long id, Model model, @CurrentMember Member member) {
-
-        //DB에 댓글정보 저장
-        CommentCommunity commentCommunity = CommentCommunity.builder()
-                .nickname(member.getNickname())
-                .nicknameOpen(member.isNicknameOpen())
-                .regdate(LocalDateTime.now())
-                .text(comment.getText())
-                .parentId(-1l)
-                .community(communityRepository.findById(id).orElseThrow())
-                .build();
-
-        commentCommunityRepository.save(commentCommunity);
-
-        return getCommunityRead(model, id, member);
-    }
-
-    /**
-     * 답글을 쓴 후 답글쓰기 버튼을 누르면 답글 정보를 DB에 저장한다
-     * @author 이선주
-     * @param subComment 쓴 답글 내용을 담는 객체
-     * @param id 댓글을 쓴 글의 id
-     * @param model 리턴할 페이지로 애트리뷰트 전달
-     * @param member 답글을 쓴 유저(현재 로그인해있는 유저)
-     * @return 답글 정보가 업데이트된 상세보기 페이지
-     */
-    @PostMapping("/community/read/subcomment/{id}")
-    public String submitSubComment(CommentCommunity subComment, @PathVariable long id, Model model, @CurrentMember Member member) {
-
-        //DB에 답글정보 저장
-        CommentCommunity subCommentCommunity = CommentCommunity.builder()
-                .nickname(member.getNickname())
-                .nicknameOpen(member.isNicknameOpen())
-                .regdate(LocalDateTime.now())
-                .text(subComment.getText())
-                .parentId(subComment.getParentId())
-                .community(communityRepository.findById(id).orElseThrow())
-                .build();
-
-        commentCommunityRepository.save(subCommentCommunity);
-
-        return getCommunityRead(model, id, member);
-    }
-
-    /**
-     * 좋아요를 누르면 DB의 정보를 업데이트한다
-     * @author 이선주
-     * @param id 좋아요를 누를 글의 id
-     * @param member 좋아요를 누를 유저(현재 로그인해있는 유저)
-     * @return jsonObject
-     */
-    @GetMapping("/community/read/like")
-    @ResponseBody
-    public String communitReadLike(Long id, @CurrentMember Member member) {
-        String resultCode = "";
-        String message = "";
-
-        // 좋아요 개수
-        int likeCheck = communityRepository.findById(id).orElseThrow().getLikers().size();
-
-        switch (communityService.addLike(member, id)) {
-            case ERROR_AUTH:
-                resultCode = "error.auth";
-                message = "로그인이 필요한 서비스입니다.";
-                break;
-            case ERROR_INVALID:
-                resultCode = "error.invalid";
-                message = "삭제된 게시물 입니다.";
-                break;
-            case ERROR_DUPLICATE:
-                resultCode = "duplicate";
-                message = "좋아요 취소 완료!";
-                likeCheck -= 1;
-                break;
-            case OK:
-                resultCode = "ok";
-                message = "좋아요 완료!";
-                likeCheck += 1;
-                break;
-        }
-
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("resultCode", resultCode);
-        jsonObject.addProperty("message", message);
-        jsonObject.addProperty("likeCheck", likeCheck);
-
-        return jsonObject.toString();
-    }
 
     /**
      * 마이페이지를 클릭하면 마이페이지 이동
-     * @author 민경,  MunKyoung
+     *
      * @param model
-     * @param member 현재 로그인한 회원
+     * @param member   현재 로그인한 회원
      * @param pageable
      * @param check
      * @param page
      * @return /member/mypage.html
+     * @author 민경,  MunKyoung
      */
     @GetMapping("/mypage")
     public String mypage(Model model,
@@ -1231,13 +525,15 @@ public class MainController {
         return "/member/mypage";
     }
 
-    /** 현재 비밀번호, 새로운 비밀번호를 입력받아 비밀번호 변경한다.
-     * @author 민경
-     * @param member 현재 로그인한 회원
+    /**
+     * 현재 비밀번호, 새로운 비밀번호를 입력받아 비밀번호 변경한다.
+     *
+     * @param member  현재 로그인한 회원
      * @param oldpass 현재 비밀번호
-     * @param pass 새로운 비밀번호
-     * @param repass 새로운 비밀번호 확인
+     * @param pass    새로운 비밀번호
+     * @param repass  새로운 비밀번호 확인
      * @return 실패 -> 실패 메세지를 띄어준다, 성공 -> db상에 비밀번호 변경한다.
+     * @author 민경
      */
     @ResponseBody
     @GetMapping("/password/change/result")
@@ -1275,6 +571,7 @@ public class MainController {
      * @author 민경
      * @param member 현재 로그인한 회원
      * @return 성공 -> db상에서 모두 삭제 후 idnex.html로 이동한다. 실패 -> member/mypage.html
+     *
      */
     @GetMapping("/memberDelete")
     @ResponseBody
@@ -1285,16 +582,18 @@ public class MainController {
         return jsonObject.toString();
     }
 
-    /** 회원의 주소, 닉네임, 닉네임 공개 유무, 핸드폰 번호 정보를 변경한다.
-     * @author 민경
-     * @param postcode 변경할 우편번호
-     * @param address 변경할 기본주소
+    /**
+     * 회원의 주소, 닉네임, 닉네임 공개 유무, 핸드폰 번호 정보를 변경한다.
+     *
+     * @param postcode      변경할 우편번호
+     * @param address       변경할 기본주소
      * @param detailAddress 변경할 상세주소
-     * @param newnickname 변경할 닉네임
-     * @param newtel 변경할 핸드폰 번호
-     * @param nicknameOpen 변경할 닉네임 공개 유무
-     * @param member 현재 로그인한 회원
+     * @param newnickname   변경할 닉네임
+     * @param newtel        변경할 핸드폰 번호
+     * @param nicknameOpen  변경할 닉네임 공개 유무
+     * @param member        현재 로그인한 회원
      * @return 실패 -> alrt로 실패 이유를 띄어 준다 성공 -> db상에 변경후 변경한 값으로 화면 변경
+     * @author 민경
      */
     @GetMapping("/mypage/change")
     @ResponseBody
@@ -1364,11 +663,7 @@ public class MainController {
      * @param tel   사용자로부터 입력받은 전화번호
      * @param model
      * @return 아이디찾기 페이지
-<<<<<<< Updated upstream
-     * @author miri
-=======
      * @author 미리
->>>>>>> Stashed changes
      */
     @RequestMapping("/idsearch")
     public String idSearchResult(String tel, Model model) {

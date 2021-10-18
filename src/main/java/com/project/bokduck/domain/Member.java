@@ -8,6 +8,7 @@ import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +23,9 @@ public class Member {
     @Id @GeneratedValue
     private Long id;
 
+    @Column(nullable = false)
+    private String name; //사용자 이름! 실명임
+
     @Column(nullable = false, unique = true)
     private String username; // 이메일
 
@@ -31,7 +35,7 @@ public class Member {
     @Column(nullable = false)
     private String tel; // 핸드폰 번호
 
-    @ColumnDefault("false")
+
     private boolean telVerified; // 핸드폰 인증 여부
 
     @Column(length = 47)

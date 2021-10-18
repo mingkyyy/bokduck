@@ -1,5 +1,6 @@
 package com.project.bokduck.service;
 
+
 import com.project.bokduck.domain.Member;
 import com.project.bokduck.domain.MemberType;
 import com.project.bokduck.domain.OAuthType;
@@ -7,7 +8,9 @@ import com.project.bokduck.domain.UserAddress;
 import com.project.bokduck.repository.MemberRepository;
 import com.project.bokduck.util.MemberUser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Primary;
+import net.nurigo.java_sdk.api.Message;
+import net.nurigo.java_sdk.exceptions.CoolsmsException;
+import org.json.simple.JSONObject;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -19,8 +22,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
-import javax.sql.DataSource;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,8 +34,6 @@ public class MemberService implements UserDetailsService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
-    private final EmailService emailService;
-
     /**
      * @author 미리
      * 임의의 사용자 계정 만들기 (관리자, 일반유저)
@@ -42,6 +43,7 @@ public class MemberService implements UserDetailsService {
         memberRepository.save(Member.builder()
                 .username("admin@test.com")
                 .password(passwordEncoder.encode("1q2w3e4r!"))
+                .name("홍길동")
                 .tel("01011111111")
                 .nickname("관리자")
                 .nicknameOpen(true)
@@ -52,6 +54,7 @@ public class MemberService implements UserDetailsService {
 
         memberRepository.save(Member.builder()
                 .username("test@test.com")
+                .name("고길동")
                 .password(passwordEncoder.encode("1q2w3e4r!"))
                 .tel("01012341234")
                 .nickname("test")
@@ -89,7 +92,6 @@ public class MemberService implements UserDetailsService {
      */
     public void processNewMember(JoinFormVo vo) {
         Member member = saveNewMember(vo);
-        emailService.sendEmail(member);
         login(member);
     }
 
@@ -101,6 +103,7 @@ public class MemberService implements UserDetailsService {
      */
     private Member saveNewMember(JoinFormVo vo) {
         Member member = Member.builder()
+                .name(vo.getName())
                 .username(vo.getUsername())
                 .password(passwordEncoder.encode(vo.getPassword()))
                 .tel(vo.getTel())
@@ -114,6 +117,30 @@ public class MemberService implements UserDetailsService {
                         .detailAddress(vo.getDetailAddress()).build())
                 .build();
         return memberRepository.save(member);
+    }
+
+    public void certifiedPhoneNumber(String phoneNumber, String cerNum) {
+        String api_key = "NCSNIGG9KCSOYLFV";
+        String api_secret = "DHZMV53VX708ZI81TNFA6AA6C29SGS0O";
+        Message coolsms = new Message(api_key, api_secret);
+
+        // 4 params(to, from, type, text) are mandatory. must be filled
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("to", phoneNumber);    // 수신전화번호
+        params.put("from", " 01053196261");    // 발신전화번호. 테스트시에는 발신,수신 둘다 본인 번호로 하면 됨
+        params.put("type", "SMS");
+        params.put("text", "bokduck 휴대폰인증 메시지 : 인증번호는" + "["+cerNum+"]" + "입니다.");
+        params.put("app_version", "test app 1.2"); // application name and version
+
+        try {
+            JSONObject obj = (JSONObject) coolsms.send(params);
+            System.out.println(obj.toString());
+
+        } catch (CoolsmsException e) {
+            System.out.println(e.getMessage());
+            System.out.println(e.getCode());
+        }
+
     }
 
 
