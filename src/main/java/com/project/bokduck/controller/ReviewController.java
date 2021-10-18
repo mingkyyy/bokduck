@@ -49,11 +49,124 @@ public class ReviewController {
     private final ReviewCategoryRepository reviewCategoryRepository;
     private final MemberRepository memberRepository;
     private final TagRepository tagRepository;
+    private final CommentReviewRepository commentReviewRepository;
 
     @Autowired
     ImageRepository imageRepository;
     @Autowired
     FileRepository fileRepository;
+
+
+
+    /**
+     * 리뷰글 작성자 본인일시 디비에 리뷰글 삭제
+     *
+     * @param id
+     * @return jsonObject
+     * @author 원재
+     */
+    @GetMapping("/read/delete")
+    @ResponseBody
+    public String reviewDelete(Long id) {
+
+        String resultCode = "";
+        String message = "";
+        if (reviewService.deleteById(id)) {
+
+            resultCode = "200";
+            message = "삭세 성공";
+        } else {
+            resultCode = "400";
+            message = "실패 되었습니다.";
+        }
+
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("resultCode", resultCode);
+        jsonObject.addProperty("message", message);
+
+        return jsonObject.toString();
+    }
+
+
+
+
+    /**
+     * 리뷰 상세보기 리뷰글 연결
+     *
+     * @param model
+     * @param id     리뷰글 id
+     * @param member 현재 로그인한 회원
+     * @return post/review/read.html
+     * @author 원재
+     */
+    @GetMapping("/read")
+    public String readReview(Model model, @RequestParam(name = "id") Long id, @CurrentMember Member member) {
+        Review review = reviewService.findById(id);
+
+        reviewService.increaseHit(id);
+
+        model.addAttribute("review", review);
+        model.addAttribute("currentMember", member);
+
+        CommentReview comment = new CommentReview();
+        model.addAttribute("comment", comment);
+
+        CommentReview subComment = new CommentReview();
+        model.addAttribute("subComment", subComment);
+
+        return "post/review/read";
+    }
+    /**
+     * 리뷰글 좋아요 누를시 특정글 좋아요 증가
+     *
+     * @param id     리뷰 id
+     * @param member 현재 로그인한 회원
+     * @return
+     * @author 원재
+     */
+    // 리뷰 컨트롤러
+    @PostMapping("/read/like")
+    @ResponseBody
+    public String readLikeReview(Long id, @CurrentMember Member member) {
+        // 좋아요 눌렀을 때
+
+        String resultCode = "";
+        String message = "";
+
+        // 좋아요 개수
+        int likeCheck = reviewService.findById(id).getLikers().size();
+
+
+        switch (reviewService.addLike(member, id)) {
+            case ERROR_AUTH:
+                resultCode = "error.auth";
+                message = "로그인이 필요한 서비스입니다.";
+                break;
+            case ERROR_INVALID:
+                resultCode = "error.invalid";
+                message = "삭제된 게시물 입니다.";
+                break;
+            case DUPLICATE:
+                resultCode = "duplicate";
+                message = "좋아요 취소 완료!";
+                likeCheck -= 1;
+                break;
+            case OK:
+                resultCode = "ok";
+                message = "좋아요 완료!";
+                likeCheck += 1;
+                break;
+        }
+
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("resultCode", resultCode);
+        jsonObject.addProperty("message", message);
+        jsonObject.addProperty("likeCheck", likeCheck);
+
+        log.info("jsonObject.toString() : {}", jsonObject.toString());
+
+        return jsonObject.toString();
+    }
 
     /**
      * /write 요청시 리뷰 쓰기 뷰페이지로 리턴
@@ -487,49 +600,33 @@ public class ReviewController {
 
         return jsonObject.toString();
     }
+    /**
+     * 리뷰 댓글 작성후 DB에 저장후 화면 전달
+     *
+     * @param comment 댓글
+     * @param id      리뷰 id
+     * @param model
+     * @param member  현재 로그인한 회원
+     * @return 리뷰글
+     * @author 원재
+     */
+    @PostMapping("/read/comment/{id}")
+    public String reviewComment(CommentReview comment, @PathVariable long id, Model model, @CurrentMember Member member) {
 
-    @PostMapping("/read/like")
-    @ResponseBody
-    public String readLikeReview(Long id, @CurrentMember Member member) {
-        // 좋아요 눌렀을 때
-        log.info("좋아요 아이디 : {}", id);
+        //DB에 댓글정보 저장
+        CommentReview commentReview = CommentReview.builder()
+                .nickname(member.getNickname())
+                .nicknameOpen(member.isNicknameOpen())
+                .regdate(LocalDateTime.now())
+                .text(comment.getText())
+                .parentId(-1l)
+                .review(reviewRepository.findById(id).orElseThrow())
+                .build();
 
-        String resultCode = "";
-        String message = "";
+        commentReviewRepository.save(commentReview);
 
-        // 좋아요 개수
-        int likeCheck = reviewService.findById(id).getLikers().size();
-
-
-        switch (reviewService.addLike(member, id)) {
-            case ERROR_AUTH:
-                resultCode = "error.auth";
-                message = "로그인이 필요한 서비스입니다.";
-                break;
-            case ERROR_INVALID:
-                resultCode = "error.invalid";
-                message = "삭제된 게시물 입니다.";
-                break;
-            case DUPLICATE:
-                resultCode = "duplicate";
-                message = "좋아요 취소 완료!";
-                likeCheck -= 1;
-                break;
-            case OK:
-                resultCode = "ok";
-                message = "좋아요 완료!";
-                likeCheck += 1;
-                break;
-        }
-
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("resultCode", resultCode);
-        jsonObject.addProperty("message", message);
-        jsonObject.addProperty("likeCheck", likeCheck);
-
-        return jsonObject.toString();
+        return readReview(model, id, member);
     }
-
     /**
      * @param member
      * @param id

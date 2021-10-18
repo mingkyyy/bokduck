@@ -41,19 +41,15 @@ public class ManageController {
         Specification<Review> spec = ReviewSpecs.searchReviewStatus(ReviewStatus.WAIT);
         Page<Review> reviewList = reviewRepository.findAll(spec, pageable);
         model.addAttribute("reviewList", reviewList);
-
         if (member == null || member.getMemberType() != MemberType.ROLE_MANAGE) {
             return "redirect:/login";
         }
         model.addAttribute("member", member);
-
         int startPage = Math.max(1, reviewList.getPageable().getPageNumber() - 10);
         int endPage = Math.min(reviewList.getTotalPages(), reviewList.getPageable().getPageNumber() + 10);
         model.addAttribute("startPage", startPage);
         model.addAttribute("endPage", endPage);
-
         log.info("reviewList : {}", reviewList);
-
         return "manage/list";
     }
 
