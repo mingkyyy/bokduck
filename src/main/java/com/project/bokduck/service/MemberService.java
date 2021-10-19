@@ -175,4 +175,7 @@ public class MemberService implements UserDetailsService {
     }
 
 
+    public Member findByName(String name) {
+        return memberRepository.findByName(name).orElseThrow();
+    }
 }

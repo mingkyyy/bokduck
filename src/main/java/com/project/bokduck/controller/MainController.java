@@ -36,6 +36,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
+
 import javax.annotation.PostConstruct;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
@@ -77,7 +78,7 @@ public class MainController {
         tmpl.execute(new TransactionCallbackWithoutResult() {
             @Override
             protected void doInTransactionWithoutResult(
-            TransactionStatus status) {
+                    TransactionStatus status) {
 
                 Long[] array = {1L, 2l};
 
@@ -366,31 +367,30 @@ public class MainController {
     }
 
     /**
-     *
      * 회원가입시 핸드폰 번호 인증 보내기
-     * @author 민경
+     *
      * @param phoneNumber 인증보낼 핸드폰 번호
      * @return 인증 번호
+     * @author 민경
      */
     @GetMapping("/check/sendSMS")
     @ResponseBody
-    public String sendSMS(String phoneNumber){
+    public String sendSMS(String phoneNumber) {
 
-        Random rand  = new Random();
+        Random rand = new Random();
         String numStr = "";
-        for(int i=0; i<4; i++) {
+        for (int i = 0; i < 4; i++) {
             String ran = Integer.toString(rand.nextInt(10));
-            numStr+=ran;
+            numStr += ran;
         }
         System.out.println("수신자 번호 : " + phoneNumber);
         System.out.println("인증번호 : " + numStr);
-        memberService.certifiedPhoneNumber(phoneNumber,numStr);
+        memberService.certifiedPhoneNumber(phoneNumber, numStr);
         return numStr;
 
     }
 
     /**
-     *
      * @return 로그인 페이지
      * @author 미리
      */
@@ -429,6 +429,7 @@ public class MainController {
         memberService.processNewMember(joinFormVo);
         return "redirect:/";
     }
+
     /**
      * 비밀번호 찾기 버튼 누르면 비밀번호 찾기 페이지를 불러온다.
      *
@@ -463,10 +464,6 @@ public class MainController {
     }
 
 
-
-
-
-
     /**
      * 비밀번호 변경 버튼을 클릭 했을때 보여주는 뷰
      *
@@ -483,8 +480,6 @@ public class MainController {
         model.addAttribute("member", "member");
         return "member/password-change";
     }
-
-
 
 
     /**
@@ -568,10 +563,10 @@ public class MainController {
 
     /**
      * 작성한 글, 댓글, 회원 정보를 모두 db상에서 삭제한다.
-     * @author 민경
+     *
      * @param member 현재 로그인한 회원
      * @return 성공 -> db상에서 모두 삭제 후 idnex.html로 이동한다. 실패 -> member/mypage.html
-     *
+     * @author 민경
      */
     @GetMapping("/memberDelete")
     @ResponseBody
@@ -659,37 +654,28 @@ public class MainController {
         return jsonObject.toString();
     }
 
-    /**
-     * @param tel   사용자로부터 입력받은 전화번호
-     * @param model
-     * @return 아이디찾기 페이지
-     * @author 미리
-     */
-    @RequestMapping("/idsearch")
-    public String idSearchResult(String tel, Model model) {
-        // 아이디 찾기
 
+    @RequestMapping("/idsearch")
+    public String idSearchResult(String tel, Model model, String name) {
         log.info("tel : {}", tel);
 
         String message = null;
-
         try {
 
-            if (tel != null) {
-                Member member = memberRepository.findByTel(tel).get();
-                String[] split = member.getUsername().split("@");
-                String repeat = "*".repeat(split[0].length() - 2);
-                message = "귀하의 가입하신 정보는 " + split[0].substring(0, 2) + repeat + "@" + split[1] + " 입니다";
-            }
+            if (name != null && tel != null ) {
+
+                    Member member = memberService.findByName(name);
+                    if (member.getTel().equals(tel)) {
+                        message = member.getUsername();
+                    } else {
+                        message = "핸드폰 번호 명의가 이름과 일치하지 않습니다.";
+                    }
+                }
 
         } catch (NoSuchElementException e) {
             message = "등록된 정보가 없습니다";
         }
-
         model.addAttribute("message", message);
-
-        log.info("메세지 : {}", message);
-
         return "member/idsearch";
     }
 }

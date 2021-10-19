@@ -15,9 +15,12 @@ import java.util.Optional;
 @Transactional
 public interface MemberRepository extends JpaRepository<Member, Long> {
     Optional<Member> findByUsername(String username);
+    Optional<Member> findByName(String name);
+
 
     boolean existsBynickname(String newnickname);
 
 
     Optional<Member> findByTel(String tel);
+
 }
