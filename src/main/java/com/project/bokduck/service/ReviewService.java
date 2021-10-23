@@ -157,7 +157,7 @@ public class ReviewService {
     public boolean deleteById(Long id) {
         reviewRepository.deleteById(id);
 
-        return reviewRepository.findById(id) == null;
+        return reviewRepository.findById(id).isEmpty();
     }
 
     /**

@@ -21,7 +21,7 @@ public class ReviewCategory {
     @Id @GeneratedValue
     private Long id;
 
-    @OneToOne(mappedBy = "reviewCategory")
+    @OneToOne(mappedBy = "reviewCategory", cascade = CascadeType.ALL)
     private Review review;
 
     @Enumerated(EnumType.STRING)

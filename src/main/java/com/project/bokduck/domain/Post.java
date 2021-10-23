@@ -36,7 +36,7 @@ public abstract class Post {
     @ManyToOne
     private Member writer; // 작성자
 
-    @ManyToMany(mappedBy = "likes", cascade = CascadeType.ALL)
+    @ManyToMany(mappedBy = "likes", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Member> likers; // 좋아요 누른 사람들
 
     @ColumnDefault("0")

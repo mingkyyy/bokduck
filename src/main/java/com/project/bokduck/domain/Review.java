@@ -47,7 +47,7 @@ public class Review extends Post implements Serializable {
     private String extraAddress; // (동)
 
     @ToString.Exclude
-    @OneToOne(optional = false)
+    @OneToOne(optional = false, cascade = CascadeType.ALL)
     private ReviewCategory reviewCategory;
 
 

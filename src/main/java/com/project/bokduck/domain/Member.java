@@ -53,7 +53,7 @@ public class Member {
     @OneToMany(mappedBy = "writer", cascade = CascadeType.ALL)
     private List<Post> write; // 글 쓴 목록
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Post> likes; // 좋아요 한 목록
 
     @ManyToMany(mappedBy = "visitedMember", cascade = CascadeType.DETACH)

@@ -568,12 +568,51 @@ public class MainController {
      * @return 성공 -> db상에서 모두 삭제 후 idnex.html로 이동한다. 실패 -> member/mypage.html
      * @author 민경
      */
-    @GetMapping("/memberDelete")
+    @Transactional
+    @GetMapping("/memberDelete") //회원 탈퇴
     @ResponseBody
     public String memberdelete(@CurrentMember Member member) {
+
+        List<Post> posts = postRepository.findByWriter(member);
+        List<CommentCommunity> commentCommunityList = commentCommunityRepository.findByNickname(member.getNickname());
+        List<CommentReview> commentReviews = commentReviewRepository.findByNickname(member.getNickname());
+        List<Post> postdLike = postRepository.findBylikers(member);
+        List<Post> postHit = postRepository.findByVisitedMember(member);
+
+        if (commentReviews != null){ //리뷰 댓글 삭제
+            for (int i=0; i<commentReviews.size(); i++){
+                commentReviewRepository.delete(commentReviews.get(i));
+            }
+        }
+
+        if (commentCommunityList != null) { //커뮤니티 댓글 삭제
+            for (int i = 0; i < commentCommunityList.size(); i++) {
+                commentCommunityRepository.delete(commentCommunityList.get(i));
+            }
+        }
+
+        if (postdLike != null){ // 좋아요 삭제
+            for (int i=0; i<postdLike.size(); i++){
+                postdLike.get(i).setLikers(null);
+                postRepository.save(postdLike.get(i));
+            }
+        }
+        if (postHit != null) { //조회수 삭제
+            for (int i = 0; i < postHit.size(); i++) {
+                postHit.get(i).setVisitedMember(null);
+                postRepository.save(postHit.get(i));
+            }
+        }
+
+        if (posts != null) { //모든 게시물 삭제
+            for (int i = 0; i < posts.size(); i++) {
+                postRepository.delete(posts.get(i));
+            }
+        }
         memberRepository.delete(member);
         SecurityContextHolder.clearContext();
         JsonObject jsonObject = new JsonObject();
+
         return jsonObject.toString();
     }
 
