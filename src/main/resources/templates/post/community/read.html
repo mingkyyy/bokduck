@@ -57,35 +57,23 @@
 
         //글삭제 팝업창 띄우기
         $(document).ready(function () {
-            $("a[id='deleteCommu']").click(function () {
+            $('#deleteCommu').click(function () {
+                let id = $('#deleteCommu').val();
+                if (confirm("게시글을 삭제하겠습니까?")){
+                $.ajax({
+                    type:'GET',
+                    url:'/community/delete',
+                    dataType:'json',
+                    data : { id : id },
+                    success:function(result) {
+                        location.href = "/community/list";
+                    }
+                });
+            } else {
 
-                console.log('함수 호출됨.');
-
-                var con = confirm("게시글을 삭제하시겠습니까?");
-
-                if (con == true) { //팝업 창에 뜨는 글씨, 예 눌렀을때 실행됨!
-
-                    console.log('confirm 예 눌렀음.');
-
-                    $.ajax({
-                        type:'GET',
-                        url:'/community/delete',
-                        dataType:'json',
-                        data : { id : $("#deleteCommu-id").val() },
-                        success:function(result) {
-                            location.href = "/community/list";
-                        }
-                    });
-                } else {
-                    console.log('confirm 아니오 누름.');
-                }
+            }
             });
         });
-
-
-
-
-
     </script>
 
 
@@ -112,11 +100,10 @@
                 <span th:text="${ community.writer.nicknameOpen ? community.writer.nickname : '익명' }" style="margin:10px"></span>
                 <span style="inline-block" class="float-right">
 
-                    <span th:if="${community.writer.id} == ${currMem.id}">
+                    <span th:if="${community.writer.id} == ${member.id}">
                         <a th:href="@{/community/modify(id=${community.id})}" class="commu-read-a">수정</a>
                         ·
-                        <a id="deleteCommu" type="button" class="commu-read-a">삭제</a>
-                        <input id="deleteCommu-id" type="hidden" th:value="${community.id}">
+                        <button type="button" th:id="deleteCommu" th:value="${community.id}" style="background-color: transparent; border: 0; outline: 0;">삭제</button>
                         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                     </span>
 
@@ -127,7 +114,11 @@
                     <span id="like_div">
 
                         <button type="button" class="like" th:id="like" th:value="${community.id}" style="border:0px; outline:0px;background-color:transparent;">
-                            <img th:src="@{ ${member?.likes?.contains(community)} ? '/images/like_red.svg' : '/images/like.svg'}" th:id="${community.id}" width="14px" height="14px" >
+                            <img th:src="@{ ${member?.likes?.contains('${community.id}')} ?  '/images/like_red.svg' : '/images/like.svg'}"
+                                 th:id="${community.id}" th:width="14px" th:height="14px"></button>
+
+<!--                            <img th:src="@{ ${member?.likes?.contains(community)} ? '/images/like_red.svg' : '/images/like.svg'}"-->
+<!--                                 th:id="${community.id}" width="14px" height="14px" >-->
                         </button>
 
                         <span th:text="${community.likers.size}" th:id="likeNum + ${community.id}"></span>
@@ -171,8 +162,8 @@
                                 <span>
                                     <svg style="filter: invert(71%) sepia(83%) saturate(1618%) hue-rotate(147deg) brightness(88%) contrast(87%);" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 512 512" height="20" viewBox="0 0 512 512" width="20"><g><path d="m399.98 402.421c.018-1.072.024-2.147.018-3.224-.43-78.454-64.434-142.599-142.887-143.193-79.91-.606-145.111 64.224-145.111 143.996 0 1.112.013 2.222.038 3.328 1.095 48.019 34.827 89.15 81.4 100.897 20.319 5.125 41.328 7.775 62.562 7.775 21.23 0 42.235-2.649 62.551-7.772 46.901-11.827 80.627-53.444 81.429-101.807z"/><path d="m437.012 74.972c-48.069-48.065-113.036-74.972-181.013-74.972-68.38 0-132.667 26.629-181.019 74.98-48.352 48.352-74.98 112.639-74.98 181.02 0 60.347 21.397 118.944 60.256 165.004 4.528 5.361 9.288 10.549 14.245 15.531 3.463 3.48 9.315.339 8.423-4.489-1.92-10.394-2.924-21.105-2.924-32.046 0-73.03 44.711-135.812 108.198-162.414 3.295-1.381 4.145-5.705 1.56-8.172-19.08-18.214-30.69-44.188-29.699-72.803 1.731-49.986 42.17-90.602 92.149-92.537 54.654-2.117 99.792 41.733 99.792 95.926 0 27.273-11.435 51.921-29.759 69.414-2.584 2.467-1.733 6.791 1.561 8.172 63.487 26.602 108.198 89.384 108.198 162.414 0 10.941-1.004 21.652-2.925 32.045-.892 4.828 4.96 7.969 8.423 4.489 4.958-4.983 9.72-10.172 14.25-15.537 38.855-46.052 60.252-104.649 60.252-164.997 0-68.385-26.631-132.676-74.988-181.028z"/><circle cx="256" cy="160" r="64"/></g></svg>
                                 </span>
-                                <span th:text="${currMem.nickname}" style="margin:10px"></span>
-                                <span th:if="${! currMem.nicknameOpen}" style="font-size:10px; padding:4px; border-radius:6px; background-color:#D9D9D9">익명</span>
+                                <span th:text="${member.nickname}" style="margin:10px"></span>
+                                <span th:if="${! member.nicknameOpen}" style="font-size:10px; padding:4px; border-radius:6px; background-color:#D9D9D9">익명</span>
                             </p>
 
                             <div class="input-group mb-3" style="margin-left:32px; position:relative; width:95%;">
@@ -245,8 +236,8 @@
                                         <span>
                                             <svg style="filter: invert(71%) sepia(83%) saturate(1618%) hue-rotate(147deg) brightness(88%) contrast(87%);" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 512 512" height="20" viewBox="0 0 512 512" width="20"><g><path d="m399.98 402.421c.018-1.072.024-2.147.018-3.224-.43-78.454-64.434-142.599-142.887-143.193-79.91-.606-145.111 64.224-145.111 143.996 0 1.112.013 2.222.038 3.328 1.095 48.019 34.827 89.15 81.4 100.897 20.319 5.125 41.328 7.775 62.562 7.775 21.23 0 42.235-2.649 62.551-7.772 46.901-11.827 80.627-53.444 81.429-101.807z"/><path d="m437.012 74.972c-48.069-48.065-113.036-74.972-181.013-74.972-68.38 0-132.667 26.629-181.019 74.98-48.352 48.352-74.98 112.639-74.98 181.02 0 60.347 21.397 118.944 60.256 165.004 4.528 5.361 9.288 10.549 14.245 15.531 3.463 3.48 9.315.339 8.423-4.489-1.92-10.394-2.924-21.105-2.924-32.046 0-73.03 44.711-135.812 108.198-162.414 3.295-1.381 4.145-5.705 1.56-8.172-19.08-18.214-30.69-44.188-29.699-72.803 1.731-49.986 42.17-90.602 92.149-92.537 54.654-2.117 99.792 41.733 99.792 95.926 0 27.273-11.435 51.921-29.759 69.414-2.584 2.467-1.733 6.791 1.561 8.172 63.487 26.602 108.198 89.384 108.198 162.414 0 10.941-1.004 21.652-2.925 32.045-.892 4.828 4.96 7.969 8.423 4.489 4.958-4.983 9.72-10.172 14.25-15.537 38.855-46.052 60.252-104.649 60.252-164.997 0-68.385-26.631-132.676-74.988-181.028z"/><circle cx="256" cy="160" r="64"/></g></svg>
                                         </span>
-                                        <span th:text="${currMem.nickname}" style="margin:10px"></span>
-                                        <span th:if="${! currMem.nicknameOpen}" style="font-size:10px; padding:4px; border-radius:6px; background-color:#D9D9D9">익명</span>
+                                        <span th:text="${member.nickname}" style="margin:10px"></span>
+                                        <span th:if="${! member.nicknameOpen}" style="font-size:10px; padding:4px; border-radius:6px; background-color:#D9D9D9">익명</span>
                                     </p>
 
                                     <div class="input-group mb-3" style="margin-left:64px; position:relative; width:92%;">

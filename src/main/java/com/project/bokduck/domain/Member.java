@@ -23,7 +23,7 @@ public class Member {
     @Id @GeneratedValue
     private Long id;
 
-    @Column(nullable = false)
+
     private String name; //사용자 이름! 실명임
 
     @Column(nullable = false, unique = true)

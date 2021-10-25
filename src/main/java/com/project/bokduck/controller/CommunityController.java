@@ -109,6 +109,7 @@ public class CommunityController {
     @ResponseBody
     public String communityDelete(Long id) {
 
+
         communityRepository.deleteById(id);
         JsonObject jsonObject = new JsonObject();
         return jsonObject.toString();
@@ -475,8 +476,8 @@ public class CommunityController {
             community.setVisitedMember(members);
         }
 
+        model.addAttribute("member",member);
         model.addAttribute("community", community);
-        model.addAttribute("currMem", member);
 
         CommentCommunity comment = new CommentCommunity();
         model.addAttribute("comment", comment);
