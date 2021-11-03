@@ -49,8 +49,8 @@ public class PassEmailService {
     private void sendHtmlMailMessage(Member member){
         String ranPw = randomPw();
 
-        String html = "<html><body>" +"임시 비밀번호"+ranPw+
-                "<p style=\"background:white\">링크 : <a href=\"http://localhost:8080/login"
+        String html = "<html><body>" +"임시 비밀번호: "+ranPw+
+                "<p style=\"background:white\"><a href=\"http://localhost:8080/login"
                 + "\">로그인 원하시는 경우 이곳을 클릭하세요.</a></p>" +
                 "</body></html>";
         try{
