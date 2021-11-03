@@ -31,6 +31,7 @@ public class JoinFormValidator implements Validator {
     public void validate(Object target, Errors errors) {
         JoinFormVo vo = (JoinFormVo) target;
         Optional<Member> optional = memberRepository.findByUsername(vo.getUsername());
+        Optional<Member> nickname = memberRepository.findByNickname(vo.getNickname());
         if (optional.isPresent()) {
             errors.rejectValue(
                     "username",
@@ -40,6 +41,12 @@ public class JoinFormValidator implements Validator {
         } else if (!(vo).getPassword().equals((vo).getPasswordVerify())) {
             errors.rejectValue("passwordVerify", "password.verify.failed", "비밀번호가 일치하지 않습니다.");
             log.info("비밀번호 불일치 : {}", errors.getAllErrors());
+        }else if (nickname.isPresent()){
+            errors.rejectValue(
+                    "nickname",
+                    "duplicate.nickname",
+                    "중복된 닉네임 입니다."
+            );
         }
     }
 }
