@@ -49,13 +49,13 @@ public class ReviewController {
     private final ReviewCategoryRepository reviewCategoryRepository;
     private final MemberRepository memberRepository;
     private final TagRepository tagRepository;
+    private final PostRepository postRepository;
     private final CommentReviewRepository commentReviewRepository;
 
     @Autowired
     ImageRepository imageRepository;
     @Autowired
     FileRepository fileRepository;
-
 
 
     /**
@@ -68,26 +68,10 @@ public class ReviewController {
     @GetMapping("/read/delete")
     @ResponseBody
     public String reviewDelete(Long id) {
-
-        String resultCode = "";
-        String message = "";
-        if (reviewService.deleteById(id)) {
-
-            resultCode = "200";
-            message = "삭세 성공";
-        } else {
-            resultCode = "400";
-            message = "실패 되었습니다.";
-        }
-
+        reviewRepository.deleteById(id);
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("resultCode", resultCode);
-        jsonObject.addProperty("message", message);
-
         return jsonObject.toString();
     }
-
-
 
 
     /**
@@ -116,6 +100,7 @@ public class ReviewController {
 
         return "post/review/read";
     }
+
     /**
      * 리뷰글 좋아요 누를시 특정글 좋아요 증가
      *
@@ -203,72 +188,43 @@ public class ReviewController {
     public String saveReview(
 
             @RequestParam("image") MultipartFile[] imageFile,
-
             @RequestParam("pdf") MultipartFile pdfFile,
-
             @CurrentMember Member member,
-
             @ModelAttribute WriteReviewVO writeReviewVO,
-
             File file, Model model) throws IOException {
-
         List<Image> imageList = new ArrayList<>();
         ReviewCategory reviewCategory = new ReviewCategory();
         Image image;
 
-        if (imageFile==null){
+        if (imageFile == null) {
             image = new Image();
             image.setImageName(null);
             image.setImagePath(null);
-            model.addAttribute("image",image);
-        }else {
-
-
-            for (int i = 0; i < imageFile.length;i++) {
-
+            model.addAttribute("image", image);
+        } else {
+            for (int i = 0; i < imageFile.length; i++) {
                 image = new Image();
-
                 String imageName = StringUtils.cleanPath(imageFile[i].getOriginalFilename());
-
                 image.setImageName(imageName);
-
                 image = imageRepository.save(image);
-
-                image.setImagePath("/review_images/" + image.getId()+"/" + imageName);
-
+                image.setImagePath("/review_images/" + image.getId() + "/" + imageName);
                 String imageUploadDest = "review_images/" + image.getId();
-
                 fileUpLoadUtil.saveFile(imageUploadDest, imageName, imageFile[i]);
-
                 imageList.add(image);
-
                 model.addAttribute("image", image);
 
             }
 
         }
 
-
-
-
-
-
         List<File> fileList = new ArrayList<>();
-
         String pdfName = StringUtils.cleanPath(pdfFile.getOriginalFilename());
-
         file.setFileName(pdfName);
-
         file = fileRepository.save(file);
-
-        file.setFilePath("/file/" + file.getId()+"/"+ pdfName);
-
+        file.setFilePath("/file/" + file.getId() + "/" + pdfName);
         String pdfUploadDest = "file/" + file.getId();
-
         fileUpLoadUtil.saveFile(pdfUploadDest, pdfName, pdfFile);
-
         fileList.add(file);
-
         model.addAttribute("file", file);
 
 
@@ -348,12 +304,11 @@ public class ReviewController {
         }
 
 
-
         Review review1;
         review1 = reviewRepository.getById(member.getId());
         reviewCategory = reviewCategoryRepository.save(reviewCategory);
 
-        Review   review = Review.builder()
+        Review review = Review.builder()
                 .writer(member)
                 .regdate(LocalDateTime.now())
                 .address(writeReviewVO.getAddress())
@@ -370,13 +325,12 @@ public class ReviewController {
                 .postContent(writeReviewVO.getReviewComment())
                 .build();
 
-        for(int i = 0; i<imageList.size();i++) {
+        for (int i = 0; i < imageList.size(); i++) {
             imageList.get(i).setImageToPost(review);
         }
-        for(int i = 0; i<fileList.size();i++) {
+        for (int i = 0; i < fileList.size(); i++) {
             fileList.get(i).setFileToPost(review);
         }
-
 
 
         reviewRepository.save(review);
@@ -387,8 +341,6 @@ public class ReviewController {
             }
             t.getTagToPost().add(review);
         }
-
-
 
 
         return "index";
@@ -600,6 +552,7 @@ public class ReviewController {
 
         return jsonObject.toString();
     }
+
     /**
      * 리뷰 댓글 작성후 DB에 저장후 화면 전달
      *
@@ -627,6 +580,7 @@ public class ReviewController {
 
         return readReview(model, id, member);
     }
+
     /**
      * @param member
      * @param id

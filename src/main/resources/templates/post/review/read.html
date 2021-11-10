@@ -37,26 +37,19 @@
                 });
             });
 
-            $(".delete").click(function (){
-                let ans = confirm("삭제하시겠습니까?");
-                if(ans){
-                    let data = $(this).val();
+            $("#deleteReview").click(function (){
+                let id = $(this).val();
+                if (confirm('게시글을 삭제 하겠습니까?')){
                     $.ajax({
-                        type: "GET",
-                        url : "/post/review/read/delete",
-                        data: { "id" : data},
+                        type: 'GET',
+                        url: '/review/read/delete',
                         dataType: 'json',
-                        success : function(result) {
-                            if(result.resultCode == 200) {
-                                alert(result.message)
-                                let url= "/post/review/list";
-                                location.replace(url);
-                            } else {
-                                alert(result.message)
-                            }
-
+                        data: {id: id},
+                        success: function (result) {
+                            location.href = "/review/list";
                         }
                     });
+                } else {
                 }
             });
 
@@ -166,7 +159,8 @@
                         <a th:href="@{/review/modify(id=${review.id})}" >수정</a>
                     </div>
                     <div class="delete">
-                        <a href="javascript:void(0)">삭제</a>
+                        <button type="button" th:id="deleteReview" th:value="*{id}"
+                                style="background-color: transparent; border: 0; outline: 0;">삭제</button>
                     </div>
                 </div>
                 <span style="margin-right: 3px; margin-left: 2px; margin-top: 5px;">조회수 </span> <span th:text="*{hit}" style="margin-top: 5px; margin-left: 2px; "></span>
@@ -182,13 +176,14 @@
     </section>
 
 
-    <div class="inner" style="text-align: center; margin-bottom: 20px">
+   <!-- <div class="inner" style="text-align: center; margin-bottom: 20px">
         <div th:if="${currentMember.id == 1}" class="adminZone">
             <p class="contract" style="text-align: left">계약서 |</p>
-            <img style="width:940px; height: 1080px;" src="https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAxNzEyMDdfMzMg%2FMDAxNTEyNjEzMDg4MjMy.LeM7X9iym1BTXxOgg4p2q-KowV2Gq1GJOD_hoM1_Vi0g.qyi9SN7gFokPbEo7Zoy0k2i4cnDsviegrov_TqPXoVMg.GIF.indarak9688%2F%25BF%25F8%25B7%25EB%25B0%25E8%25BE%25E0%25BC%25AD_%25BB%25F9%25C7%25C3.gif&type=a340" alt="계약서">
-
+            <img style="width:940px; height: 1080px;"
+                 th:src="${uploadFile.filePath}" alt="계약서">
         </div>
     </div>
+    -->
 
     <div class="images" th:if="${#lists.size(review.uploadImage)} > 0" >
         <div class="swiper mySwiper">

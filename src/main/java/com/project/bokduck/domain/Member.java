@@ -14,13 +14,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Getter @Setter @ToString @EqualsAndHashCode
-@NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
-@DynamicInsert @DynamicUpdate
+@DynamicInsert
+@DynamicUpdate
 @Slf4j
 public class Member {
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue
     private Long id;
 
 

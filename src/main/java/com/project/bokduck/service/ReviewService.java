@@ -147,18 +147,6 @@ public class ReviewService {
     }
 
 
-    /**
-     * 리뷰의 아이디로 리뷰글 삭제
-     *
-     * @param id
-     * @return
-     * @author 원재
-     */
-    public boolean deleteById(Long id) {
-        reviewRepository.deleteById(id);
-
-        return reviewRepository.findById(id).isEmpty();
-    }
 
     /**
      * @author 미리

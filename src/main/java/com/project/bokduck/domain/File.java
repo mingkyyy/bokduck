@@ -22,7 +22,7 @@ public class File {
     private String filePath;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    private Post FileToPost; // 태그한 게시물
+    private Post fileToPost; // 태그한 게시물
 
     public String getFilePath(){
         if(filePath == null) { return null; }

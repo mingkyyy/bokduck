@@ -51,7 +51,7 @@ public abstract class Post {
     @ManyToMany(mappedBy = "tagToPost", cascade = CascadeType.ALL)
     private List<Tag> tags; // 태그
 
-    @OneToMany(mappedBy = "fileName", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "fileToPost", cascade = CascadeType.ALL)
     private List<File> uploadFile; // 업로드한 파일 - 계약서
 
     @OneToMany(mappedBy = "imageToPost", cascade = CascadeType.ALL)
