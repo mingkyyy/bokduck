@@ -34,6 +34,7 @@ public class MemberService implements UserDetailsService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PassEmailService passEmailService;
     /**
      * @author 미리
      * 임의의 사용자 계정 만들기 (관리자, 일반유저)
@@ -41,7 +42,7 @@ public class MemberService implements UserDetailsService {
     @PostConstruct
     public void createTestMember() {
         memberRepository.save(Member.builder()
-                .username("admin@test.com")
+                .username("alsrus1227@naver.com")
                 .password(passwordEncoder.encode("1q2w3e4r!"))
                 .name("홍길동")
                 .tel("01011111111")
@@ -177,5 +178,18 @@ public class MemberService implements UserDetailsService {
 
     public Member findByName(String name) {
         return memberRepository.findByName(name).orElseThrow();
+    }
+
+    public String passwordSubmit(String username) {
+        Optional<Member> member = memberRepository.findByUsername(username);
+        String result = "";
+        if (member.isEmpty()) {
+            result = "none";
+        }else {
+            passEmailService.sendPassEmail(member.orElseThrow());
+            result = "ok";
+        }
+        return result;
+
     }
 }

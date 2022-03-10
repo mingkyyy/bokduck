@@ -441,26 +441,35 @@ public class MainController {
         return "member/password";
     }
 
-    /**
-     * DB상에 id를 확인하고 id 확인 후 일치하면 해당 id로 임시 비밀번호를 발송한다.
-     *
-     * @param username db 에서 비교 하는 값
-     * @param model
-     * @return 성공  -> 메일 발송, 성공 메세지 출력 , 실패 - 실패 메세지 출력 으로 member/password 뷰 변경
-     * @author 민경
-     */
+//    /**
+//     * DB상에 id를 확인하고 id 확인 후 일치하면 해당 id로 임시 비밀번호를 발송한다.
+//     *
+//     * @param username db 에서 비교 하는 값
+//     * @param model
+//     * @return 성공  -> 메일 발송, 성공 메세지 출력 , 실패 - 실패 메세지 출력 으로 member/password 뷰 변경
+//     * @author 민경
+//     */
+//    @PostMapping("/password")
+//    public String passwordSubmit(String username, Model model) {
+//        String message = " ";
+//        Optional<Member> optional = memberRepository.findByUsername(username);
+//        if (optional.isEmpty()) {
+//            message = "아이디가 없습니다. 다시 한번 시도하세요.";
+//        } else {
+//            message = "임시 비밀번호가 발송되었습니다. 이메일을 확인해주세요.";
+//            passEmailService.sendPassEmail(optional.orElseThrow());
+//        }
+//        model.addAttribute("message", message);
+//        return "member/password";
+//    }
+
+    @ResponseBody
     @PostMapping("/password")
-    public String passwordSubmit(String username, Model model) {
-        String message = " ";
-        Optional<Member> optional = memberRepository.findByUsername(username);
-        if (optional.isEmpty()) {
-            message = "아이디가 없습니다. 다시 한번 시도하세요.";
-        } else {
-            message = "임시 비밀번호가 발송되었습니다. 이메일을 확인해주세요.";
-            passEmailService.sendPassEmail(optional.orElseThrow());
-        }
-        model.addAttribute("message", message);
-        return "member/password";
+    public Object passwordSubmit(@RequestParam("username") String username){
+        Map<String, Object> map = new HashMap<>();
+        map.put("result", memberService.passwordSubmit(username));
+
+        return map;
     }
 
 
