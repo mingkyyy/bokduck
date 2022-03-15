@@ -28,9 +28,6 @@ public class CommentReview implements Serializable {
     @Column(nullable = false)
     private String nickname; // 댓글 쓴 사람 닉네임
 
-    @Column(nullable = false)
-    private boolean nicknameOpen; // 댓글 쓴 사람 닉네임 공개여부
-
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     private Review review;

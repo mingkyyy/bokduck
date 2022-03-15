@@ -6,6 +6,7 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+import javax.mail.Address;
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
@@ -65,8 +66,7 @@ public class Member {
     @ManyToMany(mappedBy = "visitedMember", cascade = CascadeType.DETACH)
     private List<Post> visitedPost;
 
-    @ColumnDefault("false")
-    private boolean nicknameOpen; // 닉네임 공개 여부
+
 
     @Enumerated(EnumType.STRING)
     private OAuthType oAuthType; // 제 3인증 타입
@@ -91,6 +91,20 @@ public class Member {
 
     public String getEmail() {
         return this.username;
+    }
+
+    public void updateNickname(String nickname){
+        this.nickname = nickname;
+    }
+
+    public void updateUserAddress(UserAddress userAddress){
+        this.userAddress = userAddress;
+    }
+
+
+
+    public void updateTel(String tel){
+        this.tel = tel;
     }
 
 

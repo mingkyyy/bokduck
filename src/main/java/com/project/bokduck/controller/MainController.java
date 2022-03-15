@@ -14,6 +14,7 @@ import com.project.bokduck.domain.Review;
 import com.project.bokduck.repository.MemberRepository;
 import com.project.bokduck.service.ReviewService;
 import com.project.bokduck.util.CurrentMember;
+import com.project.bokduck.util.MemberChangeDto;
 import com.project.bokduck.validation.JoinFormValidator;
 import com.project.bokduck.validation.JoinFormVo;
 import lombok.RequiredArgsConstructor;
@@ -197,7 +198,6 @@ public class MainController {
                     CommentReview comment1 = CommentReview.builder()
                             .text("댓글1 본문입니다... 리뷰 잘 봤습니다.")
                             .nickname(member1.getNickname())
-                            .nicknameOpen(member1.isNicknameOpen())
                             .review(commu)
                             .parentId(-1l)
                             .regdate(LocalDateTime.now())
@@ -206,7 +206,6 @@ public class MainController {
                     CommentReview comment2 = CommentReview.builder()
                             .text("댓글2 본문입니다... 좋은 리뷰였습니다.")
                             .nickname(member2.getNickname())
-                            .nicknameOpen(member2.isNicknameOpen())
                             .review(commu)
                             .parentId(-1l)
                             .regdate(LocalDateTime.now())
@@ -218,7 +217,6 @@ public class MainController {
                     CommentReview comment3 = CommentReview.builder()
                             .text("댓글1의 대댓글1입니다... 저도 그렇게 생각합니다.")
                             .nickname(member1.getNickname())
-                            .nicknameOpen(member1.isNicknameOpen())
                             .review(commu)
                             .parentId(comment1.getId())
                             .regdate(LocalDateTime.now())
@@ -227,7 +225,6 @@ public class MainController {
                     CommentReview comment4 = CommentReview.builder()
                             .text("댓글1의 대댓글2입니다... 하하하.")
                             .nickname(member2.getNickname())
-                            .nicknameOpen(member2.isNicknameOpen())
                             .review(commu)
                             .parentId(comment1.getId())
                             .regdate(LocalDateTime.now())
@@ -288,7 +285,6 @@ public class MainController {
                     CommentCommunity comment1 = CommentCommunity.builder()
                             .text("댓글1 본문입니다... 리뷰 잘 봤습니다.")
                             .nickname(member1.getNickname())
-                            .nicknameOpen(member1.isNicknameOpen())
                             .community(commu)
                             .parentId(-1L)
                             .regdate(LocalDateTime.now())
@@ -297,7 +293,6 @@ public class MainController {
                     CommentCommunity comment2 = CommentCommunity.builder()
                             .text("댓글2 본문입니다... 좋은 리뷰였습니다.")
                             .nickname(member2.getNickname())
-                            .nicknameOpen(member2.isNicknameOpen())
                             .community(commu)
                             .parentId(-1l)
                             .regdate(LocalDateTime.now())
@@ -309,7 +304,6 @@ public class MainController {
                     CommentCommunity comment3 = CommentCommunity.builder()
                             .text("댓글1의 대댓글1입니다... 저도 그렇게 생각합니다.")
                             .nickname(member1.getNickname())
-                            .nicknameOpen(member1.isNicknameOpen())
                             .community(commu)
                             .parentId(comment1.getId())
                             .regdate(LocalDateTime.now())
@@ -318,7 +312,6 @@ public class MainController {
                     CommentCommunity comment4 = CommentCommunity.builder()
                             .text("댓글1의 대댓글2입니다... 하하하.")
                             .nickname(member2.getNickname())
-                            .nicknameOpen(member2.isNicknameOpen())
                             .community(commu)
                             .parentId(comment1.getId())
                             .regdate(LocalDateTime.now())
@@ -441,38 +434,26 @@ public class MainController {
         return "member/password";
     }
 
-//    /**
-//     * DB상에 id를 확인하고 id 확인 후 일치하면 해당 id로 임시 비밀번호를 발송한다.
-//     *
-//     * @param username db 에서 비교 하는 값
-//     * @param model
-//     * @return 성공  -> 메일 발송, 성공 메세지 출력 , 실패 - 실패 메세지 출력 으로 member/password 뷰 변경
-//     * @author 민경
-//     */
-//    @PostMapping("/password")
-//    public String passwordSubmit(String username, Model model) {
-//        String message = " ";
-//        Optional<Member> optional = memberRepository.findByUsername(username);
-//        if (optional.isEmpty()) {
-//            message = "아이디가 없습니다. 다시 한번 시도하세요.";
-//        } else {
-//            message = "임시 비밀번호가 발송되었습니다. 이메일을 확인해주세요.";
-//            passEmailService.sendPassEmail(optional.orElseThrow());
-//        }
-//        model.addAttribute("message", message);
-//        return "member/password";
-//    }
-
     @ResponseBody
     @PostMapping("/password")
-    public Object passwordSubmit(@RequestParam("username") String username){
+    public Object passwordSubmit(@RequestParam("username") String username) {
         Map<String, Object> map = new HashMap<>();
         map.put("result", memberService.passwordSubmit(username));
 
         return map;
     }
 
+    @PostMapping("/mypage/change")
+    @ResponseBody
+    public Object memberChange(@RequestBody MemberChangeDto memberChangeDto, @CurrentMember Member member) {
+        Map<String, String> map = new HashMap<>();
 
+        map.put("nicknameResult", memberService.changeNickname(member, memberChangeDto.getNickname()));
+        map.put("addressResult", memberService.changeAddress(memberChangeDto, member));
+
+        return map;
+    }
+    
     /**
      * 비밀번호 변경 버튼을 클릭 했을때 보여주는 뷰
      *
@@ -588,8 +569,8 @@ public class MainController {
         List<Post> postdLike = postRepository.findBylikers(member);
         List<Post> postHit = postRepository.findByVisitedMember(member);
 
-        if (commentReviews != null){ //리뷰 댓글 삭제
-            for (int i=0; i<commentReviews.size(); i++){
+        if (commentReviews != null) { //리뷰 댓글 삭제
+            for (int i = 0; i < commentReviews.size(); i++) {
                 commentReviewRepository.delete(commentReviews.get(i));
             }
         }
@@ -600,8 +581,8 @@ public class MainController {
             }
         }
 
-        if (postdLike != null){ // 좋아요 삭제
-            for (int i=0; i<postdLike.size(); i++){
+        if (postdLike != null) { // 좋아요 삭제
+            for (int i = 0; i < postdLike.size(); i++) {
                 postdLike.get(i).setLikers(null);
                 postRepository.save(postdLike.get(i));
             }
@@ -625,82 +606,7 @@ public class MainController {
         return jsonObject.toString();
     }
 
-    /**
-     * 회원의 주소, 닉네임, 닉네임 공개 유무, 핸드폰 번호 정보를 변경한다.
-     *
-     * @param postcode      변경할 우편번호
-     * @param address       변경할 기본주소
-     * @param detailAddress 변경할 상세주소
-     * @param newnickname   변경할 닉네임
-     * @param newtel        변경할 핸드폰 번호
-     * @param nicknameOpen  변경할 닉네임 공개 유무
-     * @param member        현재 로그인한 회원
-     * @return 실패 -> alrt로 실패 이유를 띄어 준다 성공 -> db상에 변경후 변경한 값으로 화면 변경
-     * @author 민경
-     */
-    @GetMapping("/mypage/change")
-    @ResponseBody
-    public String mypageChange(String postcode, String address, String detailAddress, String newnickname,
-                               String newtel, String nicknameOpen, @CurrentMember Member member) {
 
-        String message = "변경할 정보가 없습니다";
-
-        if (!newnickname.isEmpty()) {
-            if (member.getNickname() == null || !member.getNickname().equals(newnickname)) {
-                boolean nickname = memberService.checkNickname(newnickname);
-                if (newnickname != null && nickname == true) {
-                    message = "중복된 닉네임 입니다";
-                } else if (newnickname.length() > 10 || newnickname.length() < 2) {
-                    message = "닉네임의 길이는 2자이상 10자 이하여야 합니다.";
-                } else {
-                    member.setNickname(newnickname);
-                    memberRepository.save(member);
-                    message = "변경 완료 되었습니다.";
-                }
-            }
-        }
-        if (!member.getTel().equals(newtel)) {
-            member.setTel(newtel);
-            memberRepository.save(member);
-            message = "변경 완료 되었습니다.";
-        }
-        if (member.getUserAddress() == null || !member.getUserAddress().getPostcode().equals(postcode)
-                || !member.getUserAddress().getBaseAddress().equals(address)
-                || !member.getUserAddress().getDetailAddress().equals(detailAddress)) {
-            if (!postcode.isEmpty() && !address.isEmpty() && !detailAddress.isEmpty()) {
-                member.setUserAddress(UserAddress.builder()
-                        .postcode(postcode)
-                        .baseAddress(address)
-                        .detailAddress(detailAddress)
-                        .build());
-                memberRepository.save(member);
-                message = "변경 완료 되었습니다.";
-            }
-            if (postcode == null || address == null || detailAddress == null) {
-                message = "주소를 모두 입력해주세요";
-            }
-        }
-
-        if (!String.valueOf(member.isNicknameOpen()).equals(nicknameOpen)) {//닉네임 공개 유무 설정
-            if (member.isNicknameOpen() == true) {
-                member.setNicknameOpen(false);
-                memberRepository.save(member);
-                message = "변경 완료 되었습니다.";
-
-            } else if (member.isNicknameOpen() == false) {
-                if (member.getNickname() == null && newnickname.isEmpty()) {
-                    message = "닉네임 설정후 변경할 수 있습니다.";
-                } else {
-                    member.setNicknameOpen(true);
-                    memberRepository.save(member);
-                    message = "변경 완료 되었습니다.";
-                }
-            }
-        }
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("message", message);
-        return jsonObject.toString();
-    }
 
 
     @RequestMapping("/idsearch")
@@ -710,15 +616,15 @@ public class MainController {
         String message = null;
         try {
 
-            if (name != null && tel != null ) {
+            if (name != null && tel != null) {
 
-                    Member member = memberService.findByName(name);
-                    if (member.getTel().equals(tel)) {
-                        message = member.getUsername();
-                    } else {
-                        message = "핸드폰 번호 명의가 이름과 일치하지 않습니다.";
-                    }
+                Member member = memberService.findByName(name);
+                if (member.getTel().equals(tel)) {
+                    message = member.getUsername();
+                } else {
+                    message = "핸드폰 번호 명의가 이름과 일치하지 않습니다.";
                 }
+            }
 
         } catch (NoSuchElementException e) {
             message = "등록된 정보가 없습니다";

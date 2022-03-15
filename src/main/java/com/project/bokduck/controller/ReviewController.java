@@ -569,7 +569,6 @@ public class ReviewController {
         //DB에 댓글정보 저장
         CommentReview commentReview = CommentReview.builder()
                 .nickname(member.getNickname())
-                .nicknameOpen(member.isNicknameOpen())
                 .regdate(LocalDateTime.now())
                 .text(comment.getText())
                 .parentId(-1l)

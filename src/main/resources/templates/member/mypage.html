@@ -4,6 +4,7 @@
       layout:decorate="~{layout/main-layout}" th:with="activeTab='items', title='bokduck'">
 
 <head>
+    <script th:src="@{/js/member/mypage.js}"></script>
     <style>
         #logout:link {
             color: black;
@@ -103,68 +104,6 @@
 
     </style>
 
-    <script th:inline="javascript">
-        $(document).ready(function () {
-            $('#nicknameButton').click(function () {
-                let data = $(this).val();
-                if (data == "true") {
-                    $('#nicknameButton').val(false);
-                    $('#nicknameButton').text("비공개");
-                } else {
-                    $('#nicknameButton').val(true);
-                    $('#nicknameButton').text("공개");
-                }
-            });
-
-
-            $('#out').click(function () {
-                if (confirm("정말 탈퇴 하시겠습니까?")) {
-                    $.ajax({
-                        type: 'get',
-                        url: '/memberDelete',
-                        dataType: 'json',
-                        success: function (result) {
-                            location.href = "/";
-                        }
-                    });
-                } else {
-
-                }
-            });
-
-            $('#button').click(function () {
-                let newnickname = $('#newnickname').val();
-                let newtel = $('#newtel').val();
-                let postcode = $('#postcode').val();
-                let address = $('#address').val();
-                let detailAddress = $('#detailAddress').val();
-                let nicknameOpen = $('#nicknameButton').val();
-
-                if (newtel.length != 11) {
-                    alert("핸드폰 번호 길이를 확인해주세요");
-                    return;
-                }
-                $.ajax({
-                    type: 'GET',
-                    url: '/mypage/change',
-                    data: {
-                        "newnickname": newnickname,
-                        "newtel": newtel,
-                        "postcode": postcode,
-                        "address": address,
-                        "detailAddress": detailAddress,
-                        "nicknameOpen": nicknameOpen
-                    },
-                    dataType: 'json',
-                    success: function (result) {
-                        alert(result.message);
-                    }
-                });
-
-            });
-
-        });
-    </script>
 </head>
 
 <body>
@@ -192,11 +131,7 @@
                     <div class="col-sm-5">
                         <input type="text" class="form-control" th:id="newnickname" th:value="${member.nickname}">
                     </div>
-                    <div class="col-sm-2">
-                        <button th:text="${member.nicknameOpen == true}? '공개' : '비공개'" class="form-control"
-                                th:id="nicknameButton"
-                                th:value="${member.nicknameOpen}"></button>
-                    </div>
+
                 </div>
 
                 <div class="form-group row">
@@ -296,7 +231,7 @@
                 </script>
 
                 <div class="row g-2 justify-content-left">
-                    <button type="submit" class="w-10 btn btn-lg btn-info" th:id="button">변경</button>
+                    <button type="submit" class="w-10 btn btn-lg btn-info" th:id="memberChangeButton">변경</button>
                 </div>
 
                 <hr class="col-12 my-4">
@@ -560,33 +495,33 @@
 
                     </div>
 
-                        <div class="page-num"
-                             th:with="start=${(communityList.number/communityMaxPage)*communityMaxPage + 1},
+                    <div class="page-num"
+                         th:with="start=${(communityList.number/communityMaxPage)*communityMaxPage + 1},
                   end=(${(communityList.totalPages == 0) ? 1 : (start + (communityMaxPage - 1) < communityList.totalPages ? start + (communityMaxPage - 1) : communityList.totalPages)})">
 
-                            <ul class="pagination justify-content-center">
-                                <li class="page-item" th:if="${start > 1}">
-                                    <a class="page-link" th:href="@{/mypage?(page=0)}" th:text="'<<'"></a></li>
-                                </li>
-                                <li class="page-item" th:if="${start > 1}">
-                                    <a class="page-link" th:href="@{/mypage?(page=${start - communityMaxPage})}"
-                                       th:text="'<'"></a>
-                                </li>
-                                <li class="page-item" th:each="page: ${#numbers.sequence(start, end)}">
-                                    <a class="page-link" th:href="@{/mypage?(page=${page-1})}" th:text="${page}"></a>
-                                </li>
-                                </li>
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item" th:if="${start > 1}">
+                                <a class="page-link" th:href="@{/mypage?(page=0)}" th:text="'<<'"></a></li>
+                            </li>
+                            <li class="page-item" th:if="${start > 1}">
+                                <a class="page-link" th:href="@{/mypage?(page=${start - communityMaxPage})}"
+                                   th:text="'<'"></a>
+                            </li>
+                            <li class="page-item" th:each="page: ${#numbers.sequence(start, end)}">
+                                <a class="page-link" th:href="@{/mypage?(page=${page-1})}" th:text="${page}"></a>
+                            </li>
+                            </li>
 
-                                <li class="page-item" th:if="${end < communityList.totalPages}">
-                                    <a class="page-link" th:href="@{/mypage?(page=${start + communityMaxPage})}"
-                                       th:text="'>'"></a>
-                                </li>
+                            <li class="page-item" th:if="${end < communityList.totalPages}">
+                                <a class="page-link" th:href="@{/mypage?(page=${start + communityMaxPage})}"
+                                   th:text="'>'"></a>
+                            </li>
 
-                                <li class="page-item" th:if="${end < communityList.totalPages}">
-                                    <a class="page-link" th:href="@{/mypage?(page=${communityList.totalPages-1})}"
-                                       th:text="'>>'"></a></li>
-                                </li>
-                            </ul>
+                            <li class="page-item" th:if="${end < communityList.totalPages}">
+                                <a class="page-link" th:href="@{/mypage?(page=${communityList.totalPages-1})}"
+                                   th:text="'>>'"></a></li>
+                            </li>
+                        </ul>
                     </div>
                 </section>
             </div>

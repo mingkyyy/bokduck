@@ -42,61 +42,21 @@ public class CommunityController {
     private final TagRepository tagRepository;
 
 
-
     /**
-     * 커뮤니티 게시글 수정 페이지 요청이 들어왔을 때 수정 폼 페이지를 불러온다
+     * 글쓰기를 완료하고 '게시' 버튼을 눌렀을 때 DB에 사용자가 입력한 정보를 저장한다
      *
-     * @param model 리턴할 페이지로 애트리뷰트 전달
-     * @param id    수정할 글의 id
-     * @return 글 수정 페이지
+     * @param member 글쓴이
+     * @param vo     커뮤니티 글 입력 폼을 위한 VO
+     * @param model  리턴할 페이지로 애트리뷰트 전달
+     * @return 글 상세보기 페이지로 이동
      * @author 이선주
      */
-    @GetMapping("/modify")
+    @PostMapping("/write")
     @Transactional
-    public String getCommunityModify(Model model, long id) {
-
-        Community community = communityRepository.findById(id).orElseThrow();
-
-        CommunityFormVo vo = new CommunityFormVo();
-        vo.setPostName(community.getPostName());
-        vo.setPostContent(community.getPostContent());
-
-        String strTags = "[";
-        for (int i = 0; i < community.getTags().size(); ++i) {
-            strTags += "{\"value\":\"" + community.getTags().get(i).getTagName() + "\"}";
-
-            if (i == community.getTags().size() - 1) break;
-
-            strTags += ",";
-        }
-        strTags += "]";
-
-        vo.setTags(strTags);
-
-        //카테고리 작업
-        int intCa = 0;
-
-        if (community.getCommunityCategory() == CommunityCategory.TIP) {
-            intCa = 0;
-        }
-        if (community.getCommunityCategory() == CommunityCategory.INTERIOR) {
-            intCa = 1;
-        }
-        if (community.getCommunityCategory() == CommunityCategory.EAT) {
-            intCa = 2;
-        }
-        if (community.getCommunityCategory() == CommunityCategory.BOARD) {
-            intCa = 3;
-        }
-
-        vo.setCommunityCategory(intCa);
-
-        model.addAttribute("vo", vo);
-        model.addAttribute("communityId", id);
-
-        return "post/community/modify";
+    public String communityWriteSubmit(@CurrentMember Member member, CommunityFormVo vo, Model model) {
+        Community saveCommu = communityService.saveCommunity(member, vo);
+        return getCommunityRead(model, saveCommu.getId(), member);
     }
-
 
     /**
      * '삭제' 버튼을 눌렀을 때 커뮤니티 게시글을 DB에서 삭제해준다
@@ -107,41 +67,22 @@ public class CommunityController {
      */
     @GetMapping("/delete")
     @ResponseBody
-    public String communityDelete(Long id) {
-
-
-        communityRepository.deleteById(id);
-        JsonObject jsonObject = new JsonObject();
-        return jsonObject.toString();
+    public Long communityDelete(Long id) {
+        communityService.deleteCommunity(id);
+        return id;
     }
 
-
     /**
-     * 댓글을 쓴 후 댓글쓰기 버튼을 누르면 댓글 정보를 DB에 저장한다
+     * 커뮤니티 '글쓰기' 버튼을 눌렀을 때 글쓰기 폼 페이지를 불러온다
      *
-     * @param comment 쓴 댓글 내용을 담는 객체
-     * @param id      댓글을 쓴 글의 id
-     * @param model   리턴할 페이지로 애트리뷰트 전달
-     * @param member  댓글을 쓴 유저(현재 로그인해있는 유저)
-     * @return 댓글 정보가 업데이트된 상세보기 페이지
+     * @param model 리턴할 페이지로 애트리뷰트 전달
+     * @return post/community/write.html
      * @author 이선주
      */
-    @PostMapping("/read/comment/{id}")
-    public String submitComment(CommentCommunity comment, @PathVariable long id, Model model, @CurrentMember Member member) {
-
-        //DB에 댓글정보 저장
-        CommentCommunity commentCommunity = CommentCommunity.builder()
-                .nickname(member.getNickname())
-                .nicknameOpen(member.isNicknameOpen())
-                .regdate(LocalDateTime.now())
-                .text(comment.getText())
-                .parentId(-1l)
-                .community(communityRepository.findById(id).orElseThrow())
-                .build();
-
-        commentCommunityRepository.save(commentCommunity);
-
-        return getCommunityRead(model, id, member);
+    @GetMapping("/write")
+    public String communityWriteForm(Model model) {
+        model.addAttribute("vo", new CommunityFormVo());
+        return "post/community/write";
     }
 
 
@@ -158,7 +99,6 @@ public class CommunityController {
     @PostMapping("/modify/{id}")
     @Transactional
     public String communityModifySubmit(@PathVariable long id, @CurrentMember Member member, CommunityFormVo vo, Model model) {
-
         //DB에 저장할 List<Tag>형 변수 설정
         List<Tag> tagList = new ArrayList<>();
 
@@ -226,80 +166,91 @@ public class CommunityController {
 
 
 
+    //*******************************************************************
+
     /**
-     * 글쓰기를 완료하고 '게시' 버튼을 눌렀을 때 DB에 사용자가 입력한 정보를 저장한다
+     * 커뮤니티 게시글 수정 페이지 요청이 들어왔을 때 수정 폼 페이지를 불러온다
      *
-     * @param member 글쓴이
-     * @param vo     커뮤니티 글 입력 폼을 위한 VO
-     * @param model  리턴할 페이지로 애트리뷰트 전달
-     * @return 글 상세보기 페이지로 이동
+     * @param model 리턴할 페이지로 애트리뷰트 전달
+     * @param id    수정할 글의 id
+     * @return 글 수정 페이지
      * @author 이선주
      */
-    @PostMapping("/write")
+    @GetMapping("/modify")
     @Transactional
-    public String communityWriteSubmit(@CurrentMember Member member, CommunityFormVo vo, Model model) {
+    public String getCommunityModify(Model model, long id) {
 
-        String strTags = vo.getTags();
+        Community community = communityRepository.findById(id).orElseThrow();
 
-        //DB에 저장할 List<Tag>형 변수 설정
-        List<Tag> tagList = new ArrayList<>();
+        CommunityFormVo vo = new CommunityFormVo();
+        vo.setPostName(community.getPostName());
+        vo.setPostContent(community.getPostContent());
 
-        if (!vo.getTags().isEmpty()) {
-            JsonArray tagsJsonArray = new Gson().fromJson(vo.getTags(), JsonArray.class);
+        String strTags = "[";
+        for (int i = 0; i < community.getTags().size(); ++i) {
+            strTags += "{\"value\":\"" + community.getTags().get(i).getTagName() + "\"}";
 
-            for (int i = 0; i < tagsJsonArray.size(); ++i) {
-                JsonObject object = tagsJsonArray.get(i).getAsJsonObject();
-                String tagValue = object.get("value").getAsString();
+            if (i == community.getTags().size() - 1) break;
 
-                Tag tag = Tag.builder()
-                        .tagName(tagValue)
-                        .build();
+            strTags += ",";
+        }
+        strTags += "]";
 
-                tagList.add(tag);
-            }
+        vo.setTags(strTags);
+
+        //카테고리 작업
+        int intCa = 0;
+
+        if (community.getCommunityCategory() == CommunityCategory.TIP) {
+            intCa = 0;
+        }
+        if (community.getCommunityCategory() == CommunityCategory.INTERIOR) {
+            intCa = 1;
+        }
+        if (community.getCommunityCategory() == CommunityCategory.EAT) {
+            intCa = 2;
+        }
+        if (community.getCommunityCategory() == CommunityCategory.BOARD) {
+            intCa = 3;
         }
 
-        //DB에 저장할 CommunityCategory형 변수 설정
-        CommunityCategory category = CommunityCategory.TIP;
+        vo.setCommunityCategory(intCa);
 
-        switch (vo.getCommunityCategory()) {
-            case 0:
-                category = CommunityCategory.TIP;
-                break;
-            case 1:
-                category = CommunityCategory.INTERIOR;
-                break;
-            case 2:
-                category = CommunityCategory.EAT;
-                break;
-            case 3:
-                category = CommunityCategory.BOARD;
-                break;
-            default:
-        }
+        model.addAttribute("vo", vo);
+        model.addAttribute("communityId", id);
 
-        //데이터를 DB에 저장
-        Community community = Community.builder()
-                .postName(vo.getPostName())
-                .postContent(vo.getPostContent())
+        return "post/community/modify";
+    }
+
+    /**
+     * 댓글을 쓴 후 댓글쓰기 버튼을 누르면 댓글 정보를 DB에 저장한다
+     *
+     * @param comment 쓴 댓글 내용을 담는 객체
+     * @param id      댓글을 쓴 글의 id
+     * @param model   리턴할 페이지로 애트리뷰트 전달
+     * @param member  댓글을 쓴 유저(현재 로그인해있는 유저)
+     * @return 댓글 정보가 업데이트된 상세보기 페이지
+     * @author 이선주
+     */
+    @PostMapping("/read/comment/{id}")
+    public String submitComment(CommentCommunity comment, @PathVariable long id, Model model, @CurrentMember Member member) {
+
+        //DB에 댓글정보 저장
+        CommentCommunity commentCommunity = CommentCommunity.builder()
+                .nickname(member.getNickname())
                 .regdate(LocalDateTime.now())
-                .writer(member)
-                .tags(tagList)
-                .communityCategory(category)
+                .text(comment.getText())
+                .parentId(-1l)
+                .community(communityRepository.findById(id).orElseThrow())
                 .build();
 
-        Community savedCommu = communityRepository.save(community);
+        commentCommunityRepository.save(commentCommunity);
 
-        //TAG_TAG_TO_POST 테이블에 데이터 넣기
-        for (Tag t : tagList) {
-            if (t.getTagToPost() == null) {
-                t.setTagToPost(new ArrayList<Post>());
-            }
-            t.getTagToPost().add(community);
-        }
-
-        return getCommunityRead(model, savedCommu.getId(), member);
+        return getCommunityRead(model, id, member);
     }
+
+
+
 
 
     /**
@@ -505,7 +456,6 @@ public class CommunityController {
         //DB에 답글정보 저장
         CommentCommunity subCommentCommunity = CommentCommunity.builder()
                 .nickname(member.getNickname())
-                .nicknameOpen(member.isNicknameOpen())
                 .regdate(LocalDateTime.now())
                 .text(subComment.getText())
                 .parentId(subComment.getParentId())
@@ -565,20 +515,6 @@ public class CommunityController {
         return jsonObject.toString();
     }
 
-
-
-    /**
-     * 커뮤니티 '글쓰기' 버튼을 눌렀을 때 글쓰기 폼 페이지를 불러온다
-     *
-     * @param model 리턴할 페이지로 애트리뷰트 전달
-     * @return post/community/write.html
-     * @author 이선주
-     */
-    @GetMapping("/write")
-    public String communityWriteForm(Model model) {
-        model.addAttribute("vo", new CommunityFormVo());
-        return "post/community/write";
-    }
 
 
     /**

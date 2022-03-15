@@ -1,13 +1,20 @@
 package com.project.bokduck.service;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.project.bokduck.domain.*;
 import com.project.bokduck.repository.CommunityRepository;
 import com.project.bokduck.repository.MemberRepository;
+import com.project.bokduck.util.CommunityFormVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -97,6 +104,74 @@ public class CommunityService {
     public Page<Community> findCommunityCategoryPage(CommunityCategory tip, Pageable pageable) {
         return communityRepository.findByCommunityCategory(tip, pageable);
     }
+
+    public Community saveCommunity(Member member, CommunityFormVo vo) {
+        String strTags = vo.getTags();
+
+        //DB에 저장할 List<Tag>형 변수 설정
+        List<Tag> tagList = new ArrayList<>();
+        if (!vo.getTags().isEmpty()) {
+            JsonArray tagsJsonArray = new Gson().fromJson(vo.getTags(), JsonArray.class);
+
+            for (int i = 0; i < tagsJsonArray.size(); ++i) {
+                JsonObject object = tagsJsonArray.get(i).getAsJsonObject();
+                String tagValue = object.get("value").getAsString();
+
+                Tag tag = Tag.builder()
+                        .tagName(tagValue)
+                        .build();
+
+                tagList.add(tag);
+            }
+        }
+
+        //DB에 저장할 CommunityCategory형 변수 설정
+        CommunityCategory category = CommunityCategory.TIP;
+
+        switch (vo.getCommunityCategory()) {
+            case 0:
+                category = CommunityCategory.TIP;
+                break;
+            case 1:
+                category = CommunityCategory.INTERIOR;
+                break;
+            case 2:
+                category = CommunityCategory.EAT;
+                break;
+            case 3:
+                category = CommunityCategory.BOARD;
+                break;
+            default:
+        }
+
+
+        //데이터를 DB에 저장
+        Community community = Community.builder()
+                .postName(vo.getPostName())
+                .postContent(vo.getPostContent())
+                .regdate(LocalDateTime.now())
+                .writer(member)
+                .tags(tagList)
+                .communityCategory(category)
+                .build();
+
+        Community savedCommu = communityRepository.save(community);
+
+        //TAG_TAG_TO_POST 테이블에 데이터 넣기
+        for (Tag t : tagList) {
+            if (t.getTagToPost() == null) {
+                t.setTagToPost(new ArrayList<Post>());
+            }
+            t.getTagToPost().add(community);
+        }
+
+        return savedCommu;
+    }
+
+    public void deleteCommunity(Long id) {
+        communityRepository.deleteById(id);
+    }
+
 
     /**
      * 좋아요 했을때의 이넘 종류
